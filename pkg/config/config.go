@@ -20,5 +20,6 @@ func GetPSQLDBConfig() pqconnector.Config {
 		Password: v.GetString(static.PostgresPassword),
 		Port:     v.GetInt(static.PostgresPort),
 		Database: v.GetString(static.PostgresDB),
+		SSLMode:  v.GetString(static.PostgresSSLMode),
 	}
 }

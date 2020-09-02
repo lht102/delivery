@@ -21,6 +21,7 @@ type Config struct {
 	Address  string
 	Port     int
 	Database string
+	SSLMode  string
 }
 
 func NewConn(cfg Config, migrationPath string) (models.XODB, error) {
@@ -42,12 +43,13 @@ func NewConn(cfg Config, migrationPath string) (models.XODB, error) {
 }
 
 func setupUrl(cfg Config) string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.Username,
 		url.QueryEscape(cfg.Password),
 		cfg.Address,
 		cfg.Port,
 		cfg.Database,
+		cfg.SSLMode,
 	)
 }
 

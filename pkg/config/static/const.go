@@ -6,4 +6,5 @@ const (
 	PostgresPassword = "POSTGRES_PASSWORD"
 	PostgresPort     = "POSTGRES_PORT"
 	PostgresDB       = "POSTGRES_DB"
+	PostgresSSLMode  = "POSTGRES_SSL_MODE"
 )
