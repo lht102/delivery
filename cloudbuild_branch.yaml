@@ -1,0 +1,13 @@
+timeout: 1200s
+# test
+steps:
+  - name: "docker/compose"
+    args:
+      [
+        "-f",
+        "docker-compose.test.yaml",
+        "up",
+        "--exit-code-from",
+        "test-integration",
+        "test-integration",
+      ]

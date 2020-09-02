@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /bin/sh
 
 -include .env.$(ENV)
 export
@@ -39,6 +39,9 @@ build:
 .PHONY: run
 run:
 	./bin/deliveryd
+
+.PHONY: all
+all: test build run
 
 .PHONY: migrate-db-create
 migrate-db-create:
