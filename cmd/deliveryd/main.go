@@ -5,7 +5,6 @@ import (
 
 	"github.com/lht102/delivery/pkg/config"
 	"github.com/lht102/delivery/pkg/database/pqconnector"
-	_ "github.com/lib/pq"
 )
 
 func main() {
