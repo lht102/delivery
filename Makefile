@@ -40,6 +40,9 @@ build:
 run:
 	./bin/deliveryd
 
+.PHONY: all
+all: test build run
+
 .PHONY: migrate-db-create
 migrate-db-create:
 	@PGPASSWORD="$(POSTGRES_PASSWORD)" psql -h "$(POSTGRES_HOST)" -p "$(POSTGRES_PORT)" -U "$(POSTGRES_USER)" -w -c "SELECT 1 FROM pg_database WHERE datname = '$(POSTGRES_DB)';" \
