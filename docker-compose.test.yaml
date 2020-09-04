@@ -19,7 +19,7 @@ services:
       - |
         chmod +x ./script/wait.sh
         ./script/wait.sh db 5432
-        make all
+        make test
     environment:
       POSTGRES_HOST: db
       POSTGRES_USER: postgres
