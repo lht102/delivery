@@ -15,7 +15,7 @@ func decode(w http.ResponseWriter, r *http.Request, v interface{}) error {
 func respond(w http.ResponseWriter, r *http.Request, data interface{}, status int) {
 	w.Header().Set(static.ContentTypeKey, static.ContentTypeValueJSON)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		json.NewEncoder(w).Encode(api.ErrResponse{
+		json.NewEncoder(w).Encode(api.Response{
 			StatusText: http.StatusText(status),
 			Message:    err.Error(),
 		})
@@ -24,7 +24,7 @@ func respond(w http.ResponseWriter, r *http.Request, data interface{}, status in
 
 func respondErr(w http.ResponseWriter, r *http.Request, msg string, status int) {
 	w.Header().Set(static.ContentTypeKey, static.ContentTypeValueJSON)
-	json.NewEncoder(w).Encode(api.ErrResponse{
+	json.NewEncoder(w).Encode(api.Response{
 		StatusText: http.StatusText(status),
 		Message:    msg,
 	})
