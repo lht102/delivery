@@ -7,4 +7,6 @@ const (
 	PostgresPort     = "POSTGRES_PORT"
 	PostgresDB       = "POSTGRES_DB"
 	PostgresSSLMode  = "POSTGRES_SSL_MODE"
+
+	GoogleMapAPIKey = "GOOGLE_MAP_API_KEY"
 )
