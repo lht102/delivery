@@ -2,11 +2,19 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/lht102/delivery/pkg/config"
 	"github.com/lht102/delivery/pkg/database/pqconnector"
+	"github.com/lht102/delivery/pkg/distance"
 	"github.com/lht102/delivery/pkg/httpserver"
 	"go.uber.org/zap"
+	"googlemaps.github.io/maps"
+)
+
+const (
+	httpTimeout = 5 * time.Second
 )
 
 func main() {
@@ -19,6 +27,13 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	srv := httpserver.NewServer(db, logger)
+	mapsClient, err := maps.NewClient(maps.WithHTTPClient(&http.Client{
+		Timeout: httpTimeout,
+	}), maps.WithAPIKey(config.GetGoogleMapAPIKey()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	distanceClient := distance.NewClient(mapsClient)
+	srv := httpserver.NewServer(distanceClient, db, logger)
 	srv.ListenAndServe()
 }
