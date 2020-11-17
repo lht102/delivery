@@ -7,6 +7,9 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.12.2
 	github.com/lib/pq v1.8.0
 	github.com/spf13/viper v1.7.1
+	github.com/uber/h3-go v0.0.0-20200820000214-f97962ae5e59
 	github.com/xo/dburl v0.0.0-20200727080105-4a02649c2fea
-	go.uber.org/zap v1.10.0
+	go.uber.org/zap v1.16.0
+	google.golang.org/protobuf v1.25.0
+	googlemaps.github.io/maps v1.2.3
 )
