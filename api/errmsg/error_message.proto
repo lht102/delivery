@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package errmsg;
+option go_package = "github.com/lht102/delivery/errmsg";
+
+message Error {
+  string status_text = 1;
+  string message = 2;
+}

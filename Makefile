@@ -82,3 +82,19 @@ models:
 	@mkdir -p pkg/models
 	@xo $(DB_SOURCE) -o pkg/models
 	@go build ./pkg/models
+
+.PHONY: proto
+proto:
+	@find api/ -name "*.pb.go" -type f -delete
+	protoc --proto_path=api --go_out=api --go_opt=paths=source_relative \
+		api/errmsg/*.proto \
+		api/delivery/*.proto \
+		api/delivery/simulation/*.proto
+	
+	@rm -rf build/api/js
+	@mkdir -p build/api/js
+	pbjs -t static-module -w es6 --es6 -o build/api/js/compiled.js \
+		api/errmsg/*.proto \
+		api/delivery/*.proto \
+		api/delivery/simulation/*.proto
+	pbts -o build/api/js/compiled.d.ts build/api/js/compiled.js
