@@ -10,17 +10,20 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/go-chi/chi"
+	"github.com/lht102/delivery/pkg/distance"
 	"github.com/lht102/delivery/pkg/models"
 )
 
 type server struct {
-	db     models.XODB
-	router chi.Router
-	logger *zap.Logger
+	distanceClient distance.Client
+	db             models.XODB
+	router         chi.Router
+	logger         *zap.Logger
 }
 
-func NewServer(db models.XODB, logger *zap.Logger) *server {
+func NewServer(distanceClient distance.Client, db models.XODB, logger *zap.Logger) *server {
 	srv := &server{}
+	srv.distanceClient = distanceClient
 	srv.db = db
 	srv.logger = logger
 	srv.router = chi.NewRouter()
