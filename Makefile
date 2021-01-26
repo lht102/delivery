@@ -7,7 +7,7 @@ APP_NAME = `basename ${PWD}`
 
 GOFLAGS = -mod=vendor
 MIGRATION_PATH = ./migrations/postgres
-LOCAL_PACKAGES = `go list ./... | egrep -v "vendor|mocks"`
+LOCAL_PACKAGES = `go list ./... | egrep -v "vendor|mocks|api"`
 DB_SOURCE = "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable"
 
 .PHONY: dep
