@@ -708,6 +708,8 @@ export const delivery = $root.delivery = (() => {
          * Properties of a GoodsMetadata.
          * @memberof delivery
          * @interface IGoodsMetadata
+         * @property {string|null} [uuid] GoodsMetadata uuid
+         * @property {string|null} [name] GoodsMetadata name
          * @property {number|null} [weight] GoodsMetadata weight
          * @property {number|null} [length] GoodsMetadata length
          * @property {number|null} [width] GoodsMetadata width
@@ -728,6 +730,22 @@ export const delivery = $root.delivery = (() => {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
+
+        /**
+         * GoodsMetadata uuid.
+         * @member {string} uuid
+         * @memberof delivery.GoodsMetadata
+         * @instance
+         */
+        GoodsMetadata.prototype.uuid = "";
+
+        /**
+         * GoodsMetadata name.
+         * @member {string} name
+         * @memberof delivery.GoodsMetadata
+         * @instance
+         */
+        GoodsMetadata.prototype.name = "";
 
         /**
          * GoodsMetadata weight.
@@ -785,14 +803,18 @@ export const delivery = $root.delivery = (() => {
         GoodsMetadata.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
+            if (message.uuid != null && Object.hasOwnProperty.call(message, "uuid"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.uuid);
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
             if (message.weight != null && Object.hasOwnProperty.call(message, "weight"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.weight);
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.weight);
             if (message.length != null && Object.hasOwnProperty.call(message, "length"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.length);
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.length);
             if (message.width != null && Object.hasOwnProperty.call(message, "width"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.width);
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.width);
             if (message.height != null && Object.hasOwnProperty.call(message, "height"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.height);
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.height);
             return writer;
         };
 
@@ -828,15 +850,21 @@ export const delivery = $root.delivery = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    message.weight = reader.int32();
+                    message.uuid = reader.string();
                     break;
                 case 2:
-                    message.length = reader.int32();
+                    message.name = reader.string();
                     break;
                 case 3:
-                    message.width = reader.int32();
+                    message.weight = reader.int32();
                     break;
                 case 4:
+                    message.length = reader.int32();
+                    break;
+                case 5:
+                    message.width = reader.int32();
+                    break;
+                case 6:
                     message.height = reader.int32();
                     break;
                 default:
@@ -874,6 +902,12 @@ export const delivery = $root.delivery = (() => {
         GoodsMetadata.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
+            if (message.uuid != null && message.hasOwnProperty("uuid"))
+                if (!$util.isString(message.uuid))
+                    return "uuid: string expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
             if (message.weight != null && message.hasOwnProperty("weight"))
                 if (!$util.isInteger(message.weight))
                     return "weight: integer expected";
@@ -901,6 +935,10 @@ export const delivery = $root.delivery = (() => {
             if (object instanceof $root.delivery.GoodsMetadata)
                 return object;
             let message = new $root.delivery.GoodsMetadata();
+            if (object.uuid != null)
+                message.uuid = String(object.uuid);
+            if (object.name != null)
+                message.name = String(object.name);
             if (object.weight != null)
                 message.weight = object.weight | 0;
             if (object.length != null)
@@ -926,11 +964,17 @@ export const delivery = $root.delivery = (() => {
                 options = {};
             let object = {};
             if (options.defaults) {
+                object.uuid = "";
+                object.name = "";
                 object.weight = 0;
                 object.length = 0;
                 object.width = 0;
                 object.height = 0;
             }
+            if (message.uuid != null && message.hasOwnProperty("uuid"))
+                object.uuid = message.uuid;
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
             if (message.weight != null && message.hasOwnProperty("weight"))
                 object.weight = message.weight;
             if (message.length != null && message.hasOwnProperty("length"))
@@ -1489,9 +1533,11 @@ export const delivery = $root.delivery = (() => {
              * Properties of a DriverRequest.
              * @memberof delivery.simulation
              * @interface IDriverRequest
+             * @property {string|null} [uuid] DriverRequest uuid
              * @property {string|null} [name] DriverRequest name
              * @property {delivery.IVehicleCapacity|null} [vehicleCapacity] DriverRequest vehicleCapacity
              * @property {delivery.ILatLng|null} [loc] DriverRequest loc
+             * @property {google.protobuf.ITimestamp|null} [createdAt] DriverRequest createdAt
              */
 
             /**
@@ -1508,6 +1554,14 @@ export const delivery = $root.delivery = (() => {
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
+
+            /**
+             * DriverRequest uuid.
+             * @member {string} uuid
+             * @memberof delivery.simulation.DriverRequest
+             * @instance
+             */
+            DriverRequest.prototype.uuid = "";
 
             /**
              * DriverRequest name.
@@ -1534,6 +1588,14 @@ export const delivery = $root.delivery = (() => {
             DriverRequest.prototype.loc = null;
 
             /**
+             * DriverRequest createdAt.
+             * @member {google.protobuf.ITimestamp|null|undefined} createdAt
+             * @memberof delivery.simulation.DriverRequest
+             * @instance
+             */
+            DriverRequest.prototype.createdAt = null;
+
+            /**
              * Creates a new DriverRequest instance using the specified properties.
              * @function create
              * @memberof delivery.simulation.DriverRequest
@@ -1557,12 +1619,16 @@ export const delivery = $root.delivery = (() => {
             DriverRequest.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
+                if (message.uuid != null && Object.hasOwnProperty.call(message, "uuid"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.uuid);
                 if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
                 if (message.vehicleCapacity != null && Object.hasOwnProperty.call(message, "vehicleCapacity"))
-                    $root.delivery.VehicleCapacity.encode(message.vehicleCapacity, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                    $root.delivery.VehicleCapacity.encode(message.vehicleCapacity, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.loc != null && Object.hasOwnProperty.call(message, "loc"))
-                    $root.delivery.LatLng.encode(message.loc, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                    $root.delivery.LatLng.encode(message.loc, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                if (message.createdAt != null && Object.hasOwnProperty.call(message, "createdAt"))
+                    $root.google.protobuf.Timestamp.encode(message.createdAt, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 return writer;
             };
 
@@ -1598,13 +1664,19 @@ export const delivery = $root.delivery = (() => {
                     let tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.name = reader.string();
+                        message.uuid = reader.string();
                         break;
                     case 2:
-                        message.vehicleCapacity = $root.delivery.VehicleCapacity.decode(reader, reader.uint32());
+                        message.name = reader.string();
                         break;
                     case 3:
+                        message.vehicleCapacity = $root.delivery.VehicleCapacity.decode(reader, reader.uint32());
+                        break;
+                    case 4:
                         message.loc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        break;
+                    case 5:
+                        message.createdAt = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -1641,6 +1713,9 @@ export const delivery = $root.delivery = (() => {
             DriverRequest.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (message.uuid != null && message.hasOwnProperty("uuid"))
+                    if (!$util.isString(message.uuid))
+                        return "uuid: string expected";
                 if (message.name != null && message.hasOwnProperty("name"))
                     if (!$util.isString(message.name))
                         return "name: string expected";
@@ -1653,6 +1728,11 @@ export const delivery = $root.delivery = (() => {
                     let error = $root.delivery.LatLng.verify(message.loc);
                     if (error)
                         return "loc." + error;
+                }
+                if (message.createdAt != null && message.hasOwnProperty("createdAt")) {
+                    let error = $root.google.protobuf.Timestamp.verify(message.createdAt);
+                    if (error)
+                        return "createdAt." + error;
                 }
                 return null;
             };
@@ -1669,6 +1749,8 @@ export const delivery = $root.delivery = (() => {
                 if (object instanceof $root.delivery.simulation.DriverRequest)
                     return object;
                 let message = new $root.delivery.simulation.DriverRequest();
+                if (object.uuid != null)
+                    message.uuid = String(object.uuid);
                 if (object.name != null)
                     message.name = String(object.name);
                 if (object.vehicleCapacity != null) {
@@ -1680,6 +1762,11 @@ export const delivery = $root.delivery = (() => {
                     if (typeof object.loc !== "object")
                         throw TypeError(".delivery.simulation.DriverRequest.loc: object expected");
                     message.loc = $root.delivery.LatLng.fromObject(object.loc);
+                }
+                if (object.createdAt != null) {
+                    if (typeof object.createdAt !== "object")
+                        throw TypeError(".delivery.simulation.DriverRequest.createdAt: object expected");
+                    message.createdAt = $root.google.protobuf.Timestamp.fromObject(object.createdAt);
                 }
                 return message;
             };
@@ -1698,16 +1785,22 @@ export const delivery = $root.delivery = (() => {
                     options = {};
                 let object = {};
                 if (options.defaults) {
+                    object.uuid = "";
                     object.name = "";
                     object.vehicleCapacity = null;
                     object.loc = null;
+                    object.createdAt = null;
                 }
+                if (message.uuid != null && message.hasOwnProperty("uuid"))
+                    object.uuid = message.uuid;
                 if (message.name != null && message.hasOwnProperty("name"))
                     object.name = message.name;
                 if (message.vehicleCapacity != null && message.hasOwnProperty("vehicleCapacity"))
                     object.vehicleCapacity = $root.delivery.VehicleCapacity.toObject(message.vehicleCapacity, options);
                 if (message.loc != null && message.hasOwnProperty("loc"))
                     object.loc = $root.delivery.LatLng.toObject(message.loc, options);
+                if (message.createdAt != null && message.hasOwnProperty("createdAt"))
+                    object.createdAt = $root.google.protobuf.Timestamp.toObject(message.createdAt, options);
                 return object;
             };
 
@@ -1731,6 +1824,7 @@ export const delivery = $root.delivery = (() => {
              * Properties of a DeliveryRequest.
              * @memberof delivery.simulation
              * @interface IDeliveryRequest
+             * @property {string|null} [uuid] DeliveryRequest uuid
              * @property {string|null} [name] DeliveryRequest name
              * @property {delivery.IGoodsMetadata|null} [goodsMetadata] DeliveryRequest goodsMetadata
              * @property {delivery.ILatLng|null} [srcLoc] DeliveryRequest srcLoc
@@ -1754,6 +1848,14 @@ export const delivery = $root.delivery = (() => {
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
+
+            /**
+             * DeliveryRequest uuid.
+             * @member {string} uuid
+             * @memberof delivery.simulation.DeliveryRequest
+             * @instance
+             */
+            DeliveryRequest.prototype.uuid = "";
 
             /**
              * DeliveryRequest name.
@@ -1835,20 +1937,22 @@ export const delivery = $root.delivery = (() => {
             DeliveryRequest.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
+                if (message.uuid != null && Object.hasOwnProperty.call(message, "uuid"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.uuid);
                 if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
                 if (message.goodsMetadata != null && Object.hasOwnProperty.call(message, "goodsMetadata"))
-                    $root.delivery.GoodsMetadata.encode(message.goodsMetadata, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                    $root.delivery.GoodsMetadata.encode(message.goodsMetadata, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.srcLoc != null && Object.hasOwnProperty.call(message, "srcLoc"))
-                    $root.delivery.LatLng.encode(message.srcLoc, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                    $root.delivery.LatLng.encode(message.srcLoc, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
                 if (message.dstLoc != null && Object.hasOwnProperty.call(message, "dstLoc"))
-                    $root.delivery.LatLng.encode(message.dstLoc, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.delivery.LatLng.encode(message.dstLoc, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 if (message.srcTimeWindow != null && Object.hasOwnProperty.call(message, "srcTimeWindow"))
-                    $root.delivery.TimeWindow.encode(message.srcTimeWindow, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.delivery.TimeWindow.encode(message.srcTimeWindow, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
                 if (message.dstTimeWindow != null && Object.hasOwnProperty.call(message, "dstTimeWindow"))
-                    $root.delivery.TimeWindow.encode(message.dstTimeWindow, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                    $root.delivery.TimeWindow.encode(message.dstTimeWindow, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
                 if (message.arrivedAt != null && Object.hasOwnProperty.call(message, "arrivedAt"))
-                    $root.google.protobuf.Timestamp.encode(message.arrivedAt, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                    $root.google.protobuf.Timestamp.encode(message.arrivedAt, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
                 return writer;
             };
 
@@ -1884,24 +1988,27 @@ export const delivery = $root.delivery = (() => {
                     let tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.name = reader.string();
+                        message.uuid = reader.string();
                         break;
                     case 2:
-                        message.goodsMetadata = $root.delivery.GoodsMetadata.decode(reader, reader.uint32());
+                        message.name = reader.string();
                         break;
                     case 3:
-                        message.srcLoc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        message.goodsMetadata = $root.delivery.GoodsMetadata.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.dstLoc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        message.srcLoc = $root.delivery.LatLng.decode(reader, reader.uint32());
                         break;
                     case 5:
-                        message.srcTimeWindow = $root.delivery.TimeWindow.decode(reader, reader.uint32());
+                        message.dstLoc = $root.delivery.LatLng.decode(reader, reader.uint32());
                         break;
                     case 6:
-                        message.dstTimeWindow = $root.delivery.TimeWindow.decode(reader, reader.uint32());
+                        message.srcTimeWindow = $root.delivery.TimeWindow.decode(reader, reader.uint32());
                         break;
                     case 7:
+                        message.dstTimeWindow = $root.delivery.TimeWindow.decode(reader, reader.uint32());
+                        break;
+                    case 8:
                         message.arrivedAt = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
                         break;
                     default:
@@ -1939,6 +2046,9 @@ export const delivery = $root.delivery = (() => {
             DeliveryRequest.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (message.uuid != null && message.hasOwnProperty("uuid"))
+                    if (!$util.isString(message.uuid))
+                        return "uuid: string expected";
                 if (message.name != null && message.hasOwnProperty("name"))
                     if (!$util.isString(message.name))
                         return "name: string expected";
@@ -1987,6 +2097,8 @@ export const delivery = $root.delivery = (() => {
                 if (object instanceof $root.delivery.simulation.DeliveryRequest)
                     return object;
                 let message = new $root.delivery.simulation.DeliveryRequest();
+                if (object.uuid != null)
+                    message.uuid = String(object.uuid);
                 if (object.name != null)
                     message.name = String(object.name);
                 if (object.goodsMetadata != null) {
@@ -2036,6 +2148,7 @@ export const delivery = $root.delivery = (() => {
                     options = {};
                 let object = {};
                 if (options.defaults) {
+                    object.uuid = "";
                     object.name = "";
                     object.goodsMetadata = null;
                     object.srcLoc = null;
@@ -2044,6 +2157,8 @@ export const delivery = $root.delivery = (() => {
                     object.dstTimeWindow = null;
                     object.arrivedAt = null;
                 }
+                if (message.uuid != null && message.hasOwnProperty("uuid"))
+                    object.uuid = message.uuid;
                 if (message.name != null && message.hasOwnProperty("name"))
                     object.name = message.name;
                 if (message.goodsMetadata != null && message.hasOwnProperty("goodsMetadata"))

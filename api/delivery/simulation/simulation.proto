@@ -13,18 +13,21 @@ message SimulationRequest {
 }
 
 message DriverRequest {
-  string name = 1;
-  delivery.VehicleCapacity vehicle_capacity = 2;
-  delivery.LatLng loc = 3;
+  string uuid = 1;
+  string name = 2;
+  delivery.VehicleCapacity vehicle_capacity = 3;
+  delivery.LatLng loc = 4;
+  google.protobuf.Timestamp created_at = 5;
 }
 
 
 message DeliveryRequest {
-  string name = 1;
-  delivery.GoodsMetadata goods_metadata = 2;
-  delivery.LatLng src_loc = 3;
-  delivery.LatLng dst_loc = 4;
-  delivery.TimeWindow src_time_window = 5;
-  delivery.TimeWindow dst_time_window = 6;
-  google.protobuf.Timestamp arrived_at = 7;
+  string uuid = 1;
+  string name = 2;
+  delivery.GoodsMetadata goods_metadata = 3;
+  delivery.LatLng src_loc = 4;
+  delivery.LatLng dst_loc = 5;
+  delivery.TimeWindow src_time_window = 6;
+  delivery.TimeWindow dst_time_window = 7;
+  google.protobuf.Timestamp arrived_at = 8;
 }

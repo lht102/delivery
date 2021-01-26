@@ -309,6 +309,12 @@ export namespace delivery {
     /** Properties of a GoodsMetadata. */
     interface IGoodsMetadata {
 
+        /** GoodsMetadata uuid */
+        uuid?: (string|null);
+
+        /** GoodsMetadata name */
+        name?: (string|null);
+
         /** GoodsMetadata weight */
         weight?: (number|null);
 
@@ -330,6 +336,12 @@ export namespace delivery {
          * @param [properties] Properties to set
          */
         constructor(properties?: delivery.IGoodsMetadata);
+
+        /** GoodsMetadata uuid. */
+        public uuid: string;
+
+        /** GoodsMetadata name. */
+        public name: string;
 
         /** GoodsMetadata weight. */
         public weight: number;
@@ -626,6 +638,9 @@ export namespace delivery {
         /** Properties of a DriverRequest. */
         interface IDriverRequest {
 
+            /** DriverRequest uuid */
+            uuid?: (string|null);
+
             /** DriverRequest name */
             name?: (string|null);
 
@@ -634,6 +649,9 @@ export namespace delivery {
 
             /** DriverRequest loc */
             loc?: (delivery.ILatLng|null);
+
+            /** DriverRequest createdAt */
+            createdAt?: (google.protobuf.ITimestamp|null);
         }
 
         /** Represents a DriverRequest. */
@@ -645,6 +663,9 @@ export namespace delivery {
              */
             constructor(properties?: delivery.simulation.IDriverRequest);
 
+            /** DriverRequest uuid. */
+            public uuid: string;
+
             /** DriverRequest name. */
             public name: string;
 
@@ -653,6 +674,9 @@ export namespace delivery {
 
             /** DriverRequest loc. */
             public loc?: (delivery.ILatLng|null);
+
+            /** DriverRequest createdAt. */
+            public createdAt?: (google.protobuf.ITimestamp|null);
 
             /**
              * Creates a new DriverRequest instance using the specified properties.
@@ -728,6 +752,9 @@ export namespace delivery {
         /** Properties of a DeliveryRequest. */
         interface IDeliveryRequest {
 
+            /** DeliveryRequest uuid */
+            uuid?: (string|null);
+
             /** DeliveryRequest name */
             name?: (string|null);
 
@@ -758,6 +785,9 @@ export namespace delivery {
              * @param [properties] Properties to set
              */
             constructor(properties?: delivery.simulation.IDeliveryRequest);
+
+            /** DeliveryRequest uuid. */
+            public uuid: string;
 
             /** DeliveryRequest name. */
             public name: string;

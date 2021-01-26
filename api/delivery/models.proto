@@ -18,10 +18,12 @@ message VehicleCapacity {
 }
 
 message GoodsMetadata {
-  int32 weight = 1;
-  int32 length = 2;
-  int32 width = 3;
-  int32 height = 4;
+  string uuid  = 1;
+  string name = 2;
+  int32 weight = 3;
+  int32 length = 4;
+  int32 width = 5;
+  int32 height = 6;
 }
 
 message TimeWindow {
