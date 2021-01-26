@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/lht102/delivery/api/delivery"
 	"github.com/lht102/delivery/api/delivery/simulation"
 )
@@ -42,20 +43,23 @@ func ValidateSimulationRequest(simulationRequest *simulation.SimulationRequest) 
 
 	drivers := simulationRequest.GetDriverRequests()
 	for _, driver := range drivers {
+		if err := isValidUUID(driver.GetUuid()); err != nil {
+			return err
+		}
 		vehicleCapcity := driver.GetVehicleCapacity()
 		if vehicleCapcity == nil {
 			return errMissingVehicleCapacity
 		}
-		if vehicleCapcity.GetLength() < 1 {
+		if vehicleCapcity.GetLength() <= 0 {
 			return errInvalidLength
 		}
-		if vehicleCapcity.GetWidth() < 1 {
+		if vehicleCapcity.GetWidth() <= 0 {
 			return errInvalidWidth
 		}
-		if vehicleCapcity.GetHeight() < 1 {
+		if vehicleCapcity.GetHeight() <= 0 {
 			return errInvalidHeight
 		}
-		if vehicleCapcity.GetWeight() < 1 {
+		if vehicleCapcity.GetWeight() <= 0 {
 			return errInvalidWeight
 		}
 	}
@@ -70,6 +74,9 @@ func validateTimeWindow(timeWindow *delivery.TimeWindow) error {
 }
 
 func validateDeliveryRequest(deliveryRequest *simulation.DeliveryRequest) error {
+	if err := isValidUUID(deliveryRequest.GetUuid()); err != nil {
+		return err
+	}
 	arrivedAt := deliveryRequest.GetArrivedAt()
 	if arrivedAt == nil {
 		return errMissingArrivedAt
@@ -93,17 +100,25 @@ func validateDeliveryRequest(deliveryRequest *simulation.DeliveryRequest) error 
 	if goodsMetadata == nil {
 		return errMissingGoodsMetadata
 	}
-	if goodsMetadata.GetLength() < 1 {
+	if err := isValidUUID(goodsMetadata.GetUuid()); err != nil {
+		return err
+	}
+	if goodsMetadata.GetLength() <= 0 {
 		return errInvalidLength
 	}
-	if goodsMetadata.GetWidth() < 1 {
+	if goodsMetadata.GetWidth() <= 0 {
 		return errInvalidWidth
 	}
-	if goodsMetadata.GetHeight() < 1 {
+	if goodsMetadata.GetHeight() <= 0 {
 		return errInvalidHeight
 	}
-	if goodsMetadata.GetWeight() < 1 {
+	if goodsMetadata.GetWeight() <= 0 {
 		return errInvalidWeight
 	}
 	return nil
+}
+
+func isValidUUID(u string) error {
+	_, err := uuid.Parse(u)
+	return err
 }
