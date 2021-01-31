@@ -166,7 +166,11 @@ func (b *Box) RemoveItem(id string) error {
 }
 
 func (b *Box) BoxItems() []*BoxItem {
-	return b.boxItems
+	boxItems := []*BoxItem{}
+	for _, bi := range b.boxItems {
+		boxItems = append(boxItems, bi)
+	}
+	return boxItems
 }
 
 func (b *Box) items() []*Item {
