@@ -309,9 +309,6 @@ export namespace delivery {
     /** Properties of a GoodsMetadata. */
     interface IGoodsMetadata {
 
-        /** GoodsMetadata uuid */
-        uuid?: (string|null);
-
         /** GoodsMetadata name */
         name?: (string|null);
 
@@ -336,9 +333,6 @@ export namespace delivery {
          * @param [properties] Properties to set
          */
         constructor(properties?: delivery.IGoodsMetadata);
-
-        /** GoodsMetadata uuid. */
-        public uuid: string;
 
         /** GoodsMetadata name. */
         public name: string;
@@ -530,6 +524,232 @@ export namespace delivery {
         DRIVER_STATUS_SERVING = 3
     }
 
+    /** Properties of a VehicleState. */
+    interface IVehicleState {
+
+        /** VehicleState vehicleCapacity */
+        vehicleCapacity?: (delivery.IVehicleCapacity|null);
+
+        /** VehicleState boxItems */
+        boxItems?: (delivery.IBoxItem[]|null);
+    }
+
+    /** Represents a VehicleState. */
+    class VehicleState implements IVehicleState {
+
+        /**
+         * Constructs a new VehicleState.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: delivery.IVehicleState);
+
+        /** VehicleState vehicleCapacity. */
+        public vehicleCapacity?: (delivery.IVehicleCapacity|null);
+
+        /** VehicleState boxItems. */
+        public boxItems: delivery.IBoxItem[];
+
+        /**
+         * Creates a new VehicleState instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns VehicleState instance
+         */
+        public static create(properties?: delivery.IVehicleState): delivery.VehicleState;
+
+        /**
+         * Encodes the specified VehicleState message. Does not implicitly {@link delivery.VehicleState.verify|verify} messages.
+         * @param message VehicleState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: delivery.IVehicleState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified VehicleState message, length delimited. Does not implicitly {@link delivery.VehicleState.verify|verify} messages.
+         * @param message VehicleState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: delivery.IVehicleState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a VehicleState message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns VehicleState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): delivery.VehicleState;
+
+        /**
+         * Decodes a VehicleState message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns VehicleState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): delivery.VehicleState;
+
+        /**
+         * Verifies a VehicleState message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a VehicleState message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns VehicleState
+         */
+        public static fromObject(object: { [k: string]: any }): delivery.VehicleState;
+
+        /**
+         * Creates a plain object from a VehicleState message. Also converts values to other types if specified.
+         * @param message VehicleState
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: delivery.VehicleState, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this VehicleState to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** RotationType enum. */
+    enum RotationType {
+        Rotation_Type_WLH = 0,
+        Rotation_Type_LWH = 1,
+        Rotation_Type_LHW = 2,
+        Rotation_Type_HLW = 3,
+        Rotation_Type_HWL = 4,
+        Rotation_Type_WHL = 5
+    }
+
+    /** Properties of a BoxItem. */
+    interface IBoxItem {
+
+        /** BoxItem weight */
+        weight?: (number|null);
+
+        /** BoxItem width */
+        width?: (number|null);
+
+        /** BoxItem length */
+        length?: (number|null);
+
+        /** BoxItem height */
+        height?: (number|null);
+
+        /** BoxItem rotationType */
+        rotationType?: (delivery.RotationType|null);
+
+        /** BoxItem pos */
+        pos?: (number[]|null);
+    }
+
+    /** Represents a BoxItem. */
+    class BoxItem implements IBoxItem {
+
+        /**
+         * Constructs a new BoxItem.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: delivery.IBoxItem);
+
+        /** BoxItem weight. */
+        public weight: number;
+
+        /** BoxItem width. */
+        public width: number;
+
+        /** BoxItem length. */
+        public length: number;
+
+        /** BoxItem height. */
+        public height: number;
+
+        /** BoxItem rotationType. */
+        public rotationType: delivery.RotationType;
+
+        /** BoxItem pos. */
+        public pos: number[];
+
+        /**
+         * Creates a new BoxItem instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BoxItem instance
+         */
+        public static create(properties?: delivery.IBoxItem): delivery.BoxItem;
+
+        /**
+         * Encodes the specified BoxItem message. Does not implicitly {@link delivery.BoxItem.verify|verify} messages.
+         * @param message BoxItem message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: delivery.IBoxItem, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BoxItem message, length delimited. Does not implicitly {@link delivery.BoxItem.verify|verify} messages.
+         * @param message BoxItem message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: delivery.IBoxItem, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BoxItem message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BoxItem
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): delivery.BoxItem;
+
+        /**
+         * Decodes a BoxItem message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BoxItem
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): delivery.BoxItem;
+
+        /**
+         * Verifies a BoxItem message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BoxItem message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BoxItem
+         */
+        public static fromObject(object: { [k: string]: any }): delivery.BoxItem;
+
+        /**
+         * Creates a plain object from a BoxItem message. Also converts values to other types if specified.
+         * @param message BoxItem
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: delivery.BoxItem, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BoxItem to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
     /** Namespace simulation. */
     namespace simulation {
 
@@ -647,6 +867,9 @@ export namespace delivery {
             /** DriverRequest vehicleCapacity */
             vehicleCapacity?: (delivery.IVehicleCapacity|null);
 
+            /** DriverRequest maxSpeedKmPerHour */
+            maxSpeedKmPerHour?: (number|null);
+
             /** DriverRequest loc */
             loc?: (delivery.ILatLng|null);
 
@@ -671,6 +894,9 @@ export namespace delivery {
 
             /** DriverRequest vehicleCapacity. */
             public vehicleCapacity?: (delivery.IVehicleCapacity|null);
+
+            /** DriverRequest maxSpeedKmPerHour. */
+            public maxSpeedKmPerHour: number;
 
             /** DriverRequest loc. */
             public loc?: (delivery.ILatLng|null);
@@ -773,8 +999,8 @@ export namespace delivery {
             /** DeliveryRequest dstTimeWindow */
             dstTimeWindow?: (delivery.ITimeWindow|null);
 
-            /** DeliveryRequest arrivedAt */
-            arrivedAt?: (google.protobuf.ITimestamp|null);
+            /** DeliveryRequest createdAt */
+            createdAt?: (google.protobuf.ITimestamp|null);
         }
 
         /** Represents a DeliveryRequest. */
@@ -807,8 +1033,8 @@ export namespace delivery {
             /** DeliveryRequest dstTimeWindow. */
             public dstTimeWindow?: (delivery.ITimeWindow|null);
 
-            /** DeliveryRequest arrivedAt. */
-            public arrivedAt?: (google.protobuf.ITimestamp|null);
+            /** DeliveryRequest createdAt. */
+            public createdAt?: (google.protobuf.ITimestamp|null);
 
             /**
              * Creates a new DeliveryRequest instance using the specified properties.
@@ -876,6 +1102,126 @@ export namespace delivery {
 
             /**
              * Converts this DeliveryRequest to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a Route. */
+        interface IRoute {
+
+            /** Route deliveryRequestUuid */
+            deliveryRequestUuid?: (string|null);
+
+            /** Route srcLoc */
+            srcLoc?: (delivery.ILatLng|null);
+
+            /** Route dstLoc */
+            dstLoc?: (delivery.ILatLng|null);
+
+            /** Route timeWindow */
+            timeWindow?: (delivery.ITimeWindow|null);
+
+            /** Route vehicleState */
+            vehicleState?: (delivery.IVehicleState|null);
+
+            /** Route speedKmPerHour */
+            speedKmPerHour?: (number|null);
+        }
+
+        /** Represents a Route. */
+        class Route implements IRoute {
+
+            /**
+             * Constructs a new Route.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: delivery.simulation.IRoute);
+
+            /** Route deliveryRequestUuid. */
+            public deliveryRequestUuid: string;
+
+            /** Route srcLoc. */
+            public srcLoc?: (delivery.ILatLng|null);
+
+            /** Route dstLoc. */
+            public dstLoc?: (delivery.ILatLng|null);
+
+            /** Route timeWindow. */
+            public timeWindow?: (delivery.ITimeWindow|null);
+
+            /** Route vehicleState. */
+            public vehicleState?: (delivery.IVehicleState|null);
+
+            /** Route speedKmPerHour. */
+            public speedKmPerHour: number;
+
+            /**
+             * Creates a new Route instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns Route instance
+             */
+            public static create(properties?: delivery.simulation.IRoute): delivery.simulation.Route;
+
+            /**
+             * Encodes the specified Route message. Does not implicitly {@link delivery.simulation.Route.verify|verify} messages.
+             * @param message Route message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: delivery.simulation.IRoute, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified Route message, length delimited. Does not implicitly {@link delivery.simulation.Route.verify|verify} messages.
+             * @param message Route message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: delivery.simulation.IRoute, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a Route message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Route
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): delivery.simulation.Route;
+
+            /**
+             * Decodes a Route message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns Route
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): delivery.simulation.Route;
+
+            /**
+             * Verifies a Route message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a Route message from a plain object. Also converts values to their respective internal types.
+             * @param object Plain object
+             * @returns Route
+             */
+            public static fromObject(object: { [k: string]: any }): delivery.simulation.Route;
+
+            /**
+             * Creates a plain object from a Route message. Also converts values to other types if specified.
+             * @param message Route
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: delivery.simulation.Route, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this Route to JSON.
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };

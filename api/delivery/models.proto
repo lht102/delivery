@@ -18,12 +18,11 @@ message VehicleCapacity {
 }
 
 message GoodsMetadata {
-  string uuid  = 1;
-  string name = 2;
-  int32 weight = 3;
-  int32 length = 4;
-  int32 width = 5;
-  int32 height = 6;
+  string name = 1;
+  int32 weight = 2;
+  int32 length = 3;
+  int32 width = 4;
+  int32 height = 5;
 }
 
 message TimeWindow {
@@ -36,4 +35,27 @@ enum DriverStatus {
   DRIVER_STATUS_OFFLINE = 1;
   DRIVER_STATUS_AVAILABLE = 2;
   DRIVER_STATUS_SERVING = 3;
+}
+
+message VehicleState {
+  VehicleCapacity vehicle_capacity = 1;
+  repeated BoxItem box_items = 2;
+}
+
+enum RotationType {
+	Rotation_Type_WLH = 0;
+	Rotation_Type_LWH = 1;
+	Rotation_Type_LHW = 2;
+	Rotation_Type_HLW = 3;
+	Rotation_Type_HWL = 4;
+	Rotation_Type_WHL = 5;
+}
+
+message BoxItem {
+  int32 weight = 1;
+  int32 width = 2;
+  int32 length = 3;
+  int32 height = 4;
+  RotationType rotation_type = 5;
+  repeated int32 pos = 6;
 }

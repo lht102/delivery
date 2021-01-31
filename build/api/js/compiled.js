@@ -708,7 +708,6 @@ export const delivery = $root.delivery = (() => {
          * Properties of a GoodsMetadata.
          * @memberof delivery
          * @interface IGoodsMetadata
-         * @property {string|null} [uuid] GoodsMetadata uuid
          * @property {string|null} [name] GoodsMetadata name
          * @property {number|null} [weight] GoodsMetadata weight
          * @property {number|null} [length] GoodsMetadata length
@@ -730,14 +729,6 @@ export const delivery = $root.delivery = (() => {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
-
-        /**
-         * GoodsMetadata uuid.
-         * @member {string} uuid
-         * @memberof delivery.GoodsMetadata
-         * @instance
-         */
-        GoodsMetadata.prototype.uuid = "";
 
         /**
          * GoodsMetadata name.
@@ -803,18 +794,16 @@ export const delivery = $root.delivery = (() => {
         GoodsMetadata.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.uuid != null && Object.hasOwnProperty.call(message, "uuid"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.uuid);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
             if (message.weight != null && Object.hasOwnProperty.call(message, "weight"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.weight);
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.weight);
             if (message.length != null && Object.hasOwnProperty.call(message, "length"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.length);
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.length);
             if (message.width != null && Object.hasOwnProperty.call(message, "width"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.width);
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.width);
             if (message.height != null && Object.hasOwnProperty.call(message, "height"))
-                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.height);
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.height);
             return writer;
         };
 
@@ -850,21 +839,18 @@ export const delivery = $root.delivery = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    message.uuid = reader.string();
-                    break;
-                case 2:
                     message.name = reader.string();
                     break;
-                case 3:
+                case 2:
                     message.weight = reader.int32();
                     break;
-                case 4:
+                case 3:
                     message.length = reader.int32();
                     break;
-                case 5:
+                case 4:
                     message.width = reader.int32();
                     break;
-                case 6:
+                case 5:
                     message.height = reader.int32();
                     break;
                 default:
@@ -902,9 +888,6 @@ export const delivery = $root.delivery = (() => {
         GoodsMetadata.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.uuid != null && message.hasOwnProperty("uuid"))
-                if (!$util.isString(message.uuid))
-                    return "uuid: string expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -935,8 +918,6 @@ export const delivery = $root.delivery = (() => {
             if (object instanceof $root.delivery.GoodsMetadata)
                 return object;
             let message = new $root.delivery.GoodsMetadata();
-            if (object.uuid != null)
-                message.uuid = String(object.uuid);
             if (object.name != null)
                 message.name = String(object.name);
             if (object.weight != null)
@@ -964,15 +945,12 @@ export const delivery = $root.delivery = (() => {
                 options = {};
             let object = {};
             if (options.defaults) {
-                object.uuid = "";
                 object.name = "";
                 object.weight = 0;
                 object.length = 0;
                 object.width = 0;
                 object.height = 0;
             }
-            if (message.uuid != null && message.hasOwnProperty("uuid"))
-                object.uuid = message.uuid;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.weight != null && message.hasOwnProperty("weight"))
@@ -1236,6 +1214,620 @@ export const delivery = $root.delivery = (() => {
         values[valuesById[2] = "DRIVER_STATUS_AVAILABLE"] = 2;
         values[valuesById[3] = "DRIVER_STATUS_SERVING"] = 3;
         return values;
+    })();
+
+    delivery.VehicleState = (function() {
+
+        /**
+         * Properties of a VehicleState.
+         * @memberof delivery
+         * @interface IVehicleState
+         * @property {delivery.IVehicleCapacity|null} [vehicleCapacity] VehicleState vehicleCapacity
+         * @property {Array.<delivery.IBoxItem>|null} [boxItems] VehicleState boxItems
+         */
+
+        /**
+         * Constructs a new VehicleState.
+         * @memberof delivery
+         * @classdesc Represents a VehicleState.
+         * @implements IVehicleState
+         * @constructor
+         * @param {delivery.IVehicleState=} [properties] Properties to set
+         */
+        function VehicleState(properties) {
+            this.boxItems = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * VehicleState vehicleCapacity.
+         * @member {delivery.IVehicleCapacity|null|undefined} vehicleCapacity
+         * @memberof delivery.VehicleState
+         * @instance
+         */
+        VehicleState.prototype.vehicleCapacity = null;
+
+        /**
+         * VehicleState boxItems.
+         * @member {Array.<delivery.IBoxItem>} boxItems
+         * @memberof delivery.VehicleState
+         * @instance
+         */
+        VehicleState.prototype.boxItems = $util.emptyArray;
+
+        /**
+         * Creates a new VehicleState instance using the specified properties.
+         * @function create
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {delivery.IVehicleState=} [properties] Properties to set
+         * @returns {delivery.VehicleState} VehicleState instance
+         */
+        VehicleState.create = function create(properties) {
+            return new VehicleState(properties);
+        };
+
+        /**
+         * Encodes the specified VehicleState message. Does not implicitly {@link delivery.VehicleState.verify|verify} messages.
+         * @function encode
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {delivery.IVehicleState} message VehicleState message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        VehicleState.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.vehicleCapacity != null && Object.hasOwnProperty.call(message, "vehicleCapacity"))
+                $root.delivery.VehicleCapacity.encode(message.vehicleCapacity, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.boxItems != null && message.boxItems.length)
+                for (let i = 0; i < message.boxItems.length; ++i)
+                    $root.delivery.BoxItem.encode(message.boxItems[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified VehicleState message, length delimited. Does not implicitly {@link delivery.VehicleState.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {delivery.IVehicleState} message VehicleState message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        VehicleState.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a VehicleState message from the specified reader or buffer.
+         * @function decode
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {delivery.VehicleState} VehicleState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        VehicleState.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.delivery.VehicleState();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.vehicleCapacity = $root.delivery.VehicleCapacity.decode(reader, reader.uint32());
+                    break;
+                case 2:
+                    if (!(message.boxItems && message.boxItems.length))
+                        message.boxItems = [];
+                    message.boxItems.push($root.delivery.BoxItem.decode(reader, reader.uint32()));
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a VehicleState message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {delivery.VehicleState} VehicleState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        VehicleState.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a VehicleState message.
+         * @function verify
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        VehicleState.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.vehicleCapacity != null && message.hasOwnProperty("vehicleCapacity")) {
+                let error = $root.delivery.VehicleCapacity.verify(message.vehicleCapacity);
+                if (error)
+                    return "vehicleCapacity." + error;
+            }
+            if (message.boxItems != null && message.hasOwnProperty("boxItems")) {
+                if (!Array.isArray(message.boxItems))
+                    return "boxItems: array expected";
+                for (let i = 0; i < message.boxItems.length; ++i) {
+                    let error = $root.delivery.BoxItem.verify(message.boxItems[i]);
+                    if (error)
+                        return "boxItems." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a VehicleState message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {delivery.VehicleState} VehicleState
+         */
+        VehicleState.fromObject = function fromObject(object) {
+            if (object instanceof $root.delivery.VehicleState)
+                return object;
+            let message = new $root.delivery.VehicleState();
+            if (object.vehicleCapacity != null) {
+                if (typeof object.vehicleCapacity !== "object")
+                    throw TypeError(".delivery.VehicleState.vehicleCapacity: object expected");
+                message.vehicleCapacity = $root.delivery.VehicleCapacity.fromObject(object.vehicleCapacity);
+            }
+            if (object.boxItems) {
+                if (!Array.isArray(object.boxItems))
+                    throw TypeError(".delivery.VehicleState.boxItems: array expected");
+                message.boxItems = [];
+                for (let i = 0; i < object.boxItems.length; ++i) {
+                    if (typeof object.boxItems[i] !== "object")
+                        throw TypeError(".delivery.VehicleState.boxItems: object expected");
+                    message.boxItems[i] = $root.delivery.BoxItem.fromObject(object.boxItems[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a VehicleState message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof delivery.VehicleState
+         * @static
+         * @param {delivery.VehicleState} message VehicleState
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        VehicleState.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.boxItems = [];
+            if (options.defaults)
+                object.vehicleCapacity = null;
+            if (message.vehicleCapacity != null && message.hasOwnProperty("vehicleCapacity"))
+                object.vehicleCapacity = $root.delivery.VehicleCapacity.toObject(message.vehicleCapacity, options);
+            if (message.boxItems && message.boxItems.length) {
+                object.boxItems = [];
+                for (let j = 0; j < message.boxItems.length; ++j)
+                    object.boxItems[j] = $root.delivery.BoxItem.toObject(message.boxItems[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this VehicleState to JSON.
+         * @function toJSON
+         * @memberof delivery.VehicleState
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        VehicleState.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return VehicleState;
+    })();
+
+    /**
+     * RotationType enum.
+     * @name delivery.RotationType
+     * @enum {number}
+     * @property {number} Rotation_Type_WLH=0 Rotation_Type_WLH value
+     * @property {number} Rotation_Type_LWH=1 Rotation_Type_LWH value
+     * @property {number} Rotation_Type_LHW=2 Rotation_Type_LHW value
+     * @property {number} Rotation_Type_HLW=3 Rotation_Type_HLW value
+     * @property {number} Rotation_Type_HWL=4 Rotation_Type_HWL value
+     * @property {number} Rotation_Type_WHL=5 Rotation_Type_WHL value
+     */
+    delivery.RotationType = (function() {
+        const valuesById = {}, values = Object.create(valuesById);
+        values[valuesById[0] = "Rotation_Type_WLH"] = 0;
+        values[valuesById[1] = "Rotation_Type_LWH"] = 1;
+        values[valuesById[2] = "Rotation_Type_LHW"] = 2;
+        values[valuesById[3] = "Rotation_Type_HLW"] = 3;
+        values[valuesById[4] = "Rotation_Type_HWL"] = 4;
+        values[valuesById[5] = "Rotation_Type_WHL"] = 5;
+        return values;
+    })();
+
+    delivery.BoxItem = (function() {
+
+        /**
+         * Properties of a BoxItem.
+         * @memberof delivery
+         * @interface IBoxItem
+         * @property {number|null} [weight] BoxItem weight
+         * @property {number|null} [width] BoxItem width
+         * @property {number|null} [length] BoxItem length
+         * @property {number|null} [height] BoxItem height
+         * @property {delivery.RotationType|null} [rotationType] BoxItem rotationType
+         * @property {Array.<number>|null} [pos] BoxItem pos
+         */
+
+        /**
+         * Constructs a new BoxItem.
+         * @memberof delivery
+         * @classdesc Represents a BoxItem.
+         * @implements IBoxItem
+         * @constructor
+         * @param {delivery.IBoxItem=} [properties] Properties to set
+         */
+        function BoxItem(properties) {
+            this.pos = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * BoxItem weight.
+         * @member {number} weight
+         * @memberof delivery.BoxItem
+         * @instance
+         */
+        BoxItem.prototype.weight = 0;
+
+        /**
+         * BoxItem width.
+         * @member {number} width
+         * @memberof delivery.BoxItem
+         * @instance
+         */
+        BoxItem.prototype.width = 0;
+
+        /**
+         * BoxItem length.
+         * @member {number} length
+         * @memberof delivery.BoxItem
+         * @instance
+         */
+        BoxItem.prototype.length = 0;
+
+        /**
+         * BoxItem height.
+         * @member {number} height
+         * @memberof delivery.BoxItem
+         * @instance
+         */
+        BoxItem.prototype.height = 0;
+
+        /**
+         * BoxItem rotationType.
+         * @member {delivery.RotationType} rotationType
+         * @memberof delivery.BoxItem
+         * @instance
+         */
+        BoxItem.prototype.rotationType = 0;
+
+        /**
+         * BoxItem pos.
+         * @member {Array.<number>} pos
+         * @memberof delivery.BoxItem
+         * @instance
+         */
+        BoxItem.prototype.pos = $util.emptyArray;
+
+        /**
+         * Creates a new BoxItem instance using the specified properties.
+         * @function create
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {delivery.IBoxItem=} [properties] Properties to set
+         * @returns {delivery.BoxItem} BoxItem instance
+         */
+        BoxItem.create = function create(properties) {
+            return new BoxItem(properties);
+        };
+
+        /**
+         * Encodes the specified BoxItem message. Does not implicitly {@link delivery.BoxItem.verify|verify} messages.
+         * @function encode
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {delivery.IBoxItem} message BoxItem message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        BoxItem.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.weight != null && Object.hasOwnProperty.call(message, "weight"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.weight);
+            if (message.width != null && Object.hasOwnProperty.call(message, "width"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.width);
+            if (message.length != null && Object.hasOwnProperty.call(message, "length"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.length);
+            if (message.height != null && Object.hasOwnProperty.call(message, "height"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.height);
+            if (message.rotationType != null && Object.hasOwnProperty.call(message, "rotationType"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.rotationType);
+            if (message.pos != null && message.pos.length) {
+                writer.uint32(/* id 6, wireType 2 =*/50).fork();
+                for (let i = 0; i < message.pos.length; ++i)
+                    writer.int32(message.pos[i]);
+                writer.ldelim();
+            }
+            return writer;
+        };
+
+        /**
+         * Encodes the specified BoxItem message, length delimited. Does not implicitly {@link delivery.BoxItem.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {delivery.IBoxItem} message BoxItem message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        BoxItem.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a BoxItem message from the specified reader or buffer.
+         * @function decode
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {delivery.BoxItem} BoxItem
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        BoxItem.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.delivery.BoxItem();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.weight = reader.int32();
+                    break;
+                case 2:
+                    message.width = reader.int32();
+                    break;
+                case 3:
+                    message.length = reader.int32();
+                    break;
+                case 4:
+                    message.height = reader.int32();
+                    break;
+                case 5:
+                    message.rotationType = reader.int32();
+                    break;
+                case 6:
+                    if (!(message.pos && message.pos.length))
+                        message.pos = [];
+                    if ((tag & 7) === 2) {
+                        let end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.pos.push(reader.int32());
+                    } else
+                        message.pos.push(reader.int32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a BoxItem message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {delivery.BoxItem} BoxItem
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        BoxItem.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a BoxItem message.
+         * @function verify
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        BoxItem.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.weight != null && message.hasOwnProperty("weight"))
+                if (!$util.isInteger(message.weight))
+                    return "weight: integer expected";
+            if (message.width != null && message.hasOwnProperty("width"))
+                if (!$util.isInteger(message.width))
+                    return "width: integer expected";
+            if (message.length != null && message.hasOwnProperty("length"))
+                if (!$util.isInteger(message.length))
+                    return "length: integer expected";
+            if (message.height != null && message.hasOwnProperty("height"))
+                if (!$util.isInteger(message.height))
+                    return "height: integer expected";
+            if (message.rotationType != null && message.hasOwnProperty("rotationType"))
+                switch (message.rotationType) {
+                default:
+                    return "rotationType: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    break;
+                }
+            if (message.pos != null && message.hasOwnProperty("pos")) {
+                if (!Array.isArray(message.pos))
+                    return "pos: array expected";
+                for (let i = 0; i < message.pos.length; ++i)
+                    if (!$util.isInteger(message.pos[i]))
+                        return "pos: integer[] expected";
+            }
+            return null;
+        };
+
+        /**
+         * Creates a BoxItem message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {delivery.BoxItem} BoxItem
+         */
+        BoxItem.fromObject = function fromObject(object) {
+            if (object instanceof $root.delivery.BoxItem)
+                return object;
+            let message = new $root.delivery.BoxItem();
+            if (object.weight != null)
+                message.weight = object.weight | 0;
+            if (object.width != null)
+                message.width = object.width | 0;
+            if (object.length != null)
+                message.length = object.length | 0;
+            if (object.height != null)
+                message.height = object.height | 0;
+            switch (object.rotationType) {
+            case "Rotation_Type_WLH":
+            case 0:
+                message.rotationType = 0;
+                break;
+            case "Rotation_Type_LWH":
+            case 1:
+                message.rotationType = 1;
+                break;
+            case "Rotation_Type_LHW":
+            case 2:
+                message.rotationType = 2;
+                break;
+            case "Rotation_Type_HLW":
+            case 3:
+                message.rotationType = 3;
+                break;
+            case "Rotation_Type_HWL":
+            case 4:
+                message.rotationType = 4;
+                break;
+            case "Rotation_Type_WHL":
+            case 5:
+                message.rotationType = 5;
+                break;
+            }
+            if (object.pos) {
+                if (!Array.isArray(object.pos))
+                    throw TypeError(".delivery.BoxItem.pos: array expected");
+                message.pos = [];
+                for (let i = 0; i < object.pos.length; ++i)
+                    message.pos[i] = object.pos[i] | 0;
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a BoxItem message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof delivery.BoxItem
+         * @static
+         * @param {delivery.BoxItem} message BoxItem
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        BoxItem.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.pos = [];
+            if (options.defaults) {
+                object.weight = 0;
+                object.width = 0;
+                object.length = 0;
+                object.height = 0;
+                object.rotationType = options.enums === String ? "Rotation_Type_WLH" : 0;
+            }
+            if (message.weight != null && message.hasOwnProperty("weight"))
+                object.weight = message.weight;
+            if (message.width != null && message.hasOwnProperty("width"))
+                object.width = message.width;
+            if (message.length != null && message.hasOwnProperty("length"))
+                object.length = message.length;
+            if (message.height != null && message.hasOwnProperty("height"))
+                object.height = message.height;
+            if (message.rotationType != null && message.hasOwnProperty("rotationType"))
+                object.rotationType = options.enums === String ? $root.delivery.RotationType[message.rotationType] : message.rotationType;
+            if (message.pos && message.pos.length) {
+                object.pos = [];
+                for (let j = 0; j < message.pos.length; ++j)
+                    object.pos[j] = message.pos[j];
+            }
+            return object;
+        };
+
+        /**
+         * Converts this BoxItem to JSON.
+         * @function toJSON
+         * @memberof delivery.BoxItem
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        BoxItem.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return BoxItem;
     })();
 
     delivery.simulation = (function() {
@@ -1536,6 +2128,7 @@ export const delivery = $root.delivery = (() => {
              * @property {string|null} [uuid] DriverRequest uuid
              * @property {string|null} [name] DriverRequest name
              * @property {delivery.IVehicleCapacity|null} [vehicleCapacity] DriverRequest vehicleCapacity
+             * @property {number|null} [maxSpeedKmPerHour] DriverRequest maxSpeedKmPerHour
              * @property {delivery.ILatLng|null} [loc] DriverRequest loc
              * @property {google.protobuf.ITimestamp|null} [createdAt] DriverRequest createdAt
              */
@@ -1578,6 +2171,14 @@ export const delivery = $root.delivery = (() => {
              * @instance
              */
             DriverRequest.prototype.vehicleCapacity = null;
+
+            /**
+             * DriverRequest maxSpeedKmPerHour.
+             * @member {number} maxSpeedKmPerHour
+             * @memberof delivery.simulation.DriverRequest
+             * @instance
+             */
+            DriverRequest.prototype.maxSpeedKmPerHour = 0;
 
             /**
              * DriverRequest loc.
@@ -1625,10 +2226,12 @@ export const delivery = $root.delivery = (() => {
                     writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
                 if (message.vehicleCapacity != null && Object.hasOwnProperty.call(message, "vehicleCapacity"))
                     $root.delivery.VehicleCapacity.encode(message.vehicleCapacity, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.maxSpeedKmPerHour != null && Object.hasOwnProperty.call(message, "maxSpeedKmPerHour"))
+                    writer.uint32(/* id 4, wireType 1 =*/33).double(message.maxSpeedKmPerHour);
                 if (message.loc != null && Object.hasOwnProperty.call(message, "loc"))
-                    $root.delivery.LatLng.encode(message.loc, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.delivery.LatLng.encode(message.loc, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 if (message.createdAt != null && Object.hasOwnProperty.call(message, "createdAt"))
-                    $root.google.protobuf.Timestamp.encode(message.createdAt, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.google.protobuf.Timestamp.encode(message.createdAt, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
                 return writer;
             };
 
@@ -1673,9 +2276,12 @@ export const delivery = $root.delivery = (() => {
                         message.vehicleCapacity = $root.delivery.VehicleCapacity.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.loc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        message.maxSpeedKmPerHour = reader.double();
                         break;
                     case 5:
+                        message.loc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        break;
+                    case 6:
                         message.createdAt = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
                         break;
                     default:
@@ -1724,6 +2330,9 @@ export const delivery = $root.delivery = (() => {
                     if (error)
                         return "vehicleCapacity." + error;
                 }
+                if (message.maxSpeedKmPerHour != null && message.hasOwnProperty("maxSpeedKmPerHour"))
+                    if (typeof message.maxSpeedKmPerHour !== "number")
+                        return "maxSpeedKmPerHour: number expected";
                 if (message.loc != null && message.hasOwnProperty("loc")) {
                     let error = $root.delivery.LatLng.verify(message.loc);
                     if (error)
@@ -1758,6 +2367,8 @@ export const delivery = $root.delivery = (() => {
                         throw TypeError(".delivery.simulation.DriverRequest.vehicleCapacity: object expected");
                     message.vehicleCapacity = $root.delivery.VehicleCapacity.fromObject(object.vehicleCapacity);
                 }
+                if (object.maxSpeedKmPerHour != null)
+                    message.maxSpeedKmPerHour = Number(object.maxSpeedKmPerHour);
                 if (object.loc != null) {
                     if (typeof object.loc !== "object")
                         throw TypeError(".delivery.simulation.DriverRequest.loc: object expected");
@@ -1788,6 +2399,7 @@ export const delivery = $root.delivery = (() => {
                     object.uuid = "";
                     object.name = "";
                     object.vehicleCapacity = null;
+                    object.maxSpeedKmPerHour = 0;
                     object.loc = null;
                     object.createdAt = null;
                 }
@@ -1797,6 +2409,8 @@ export const delivery = $root.delivery = (() => {
                     object.name = message.name;
                 if (message.vehicleCapacity != null && message.hasOwnProperty("vehicleCapacity"))
                     object.vehicleCapacity = $root.delivery.VehicleCapacity.toObject(message.vehicleCapacity, options);
+                if (message.maxSpeedKmPerHour != null && message.hasOwnProperty("maxSpeedKmPerHour"))
+                    object.maxSpeedKmPerHour = options.json && !isFinite(message.maxSpeedKmPerHour) ? String(message.maxSpeedKmPerHour) : message.maxSpeedKmPerHour;
                 if (message.loc != null && message.hasOwnProperty("loc"))
                     object.loc = $root.delivery.LatLng.toObject(message.loc, options);
                 if (message.createdAt != null && message.hasOwnProperty("createdAt"))
@@ -1831,7 +2445,7 @@ export const delivery = $root.delivery = (() => {
              * @property {delivery.ILatLng|null} [dstLoc] DeliveryRequest dstLoc
              * @property {delivery.ITimeWindow|null} [srcTimeWindow] DeliveryRequest srcTimeWindow
              * @property {delivery.ITimeWindow|null} [dstTimeWindow] DeliveryRequest dstTimeWindow
-             * @property {google.protobuf.ITimestamp|null} [arrivedAt] DeliveryRequest arrivedAt
+             * @property {google.protobuf.ITimestamp|null} [createdAt] DeliveryRequest createdAt
              */
 
             /**
@@ -1906,12 +2520,12 @@ export const delivery = $root.delivery = (() => {
             DeliveryRequest.prototype.dstTimeWindow = null;
 
             /**
-             * DeliveryRequest arrivedAt.
-             * @member {google.protobuf.ITimestamp|null|undefined} arrivedAt
+             * DeliveryRequest createdAt.
+             * @member {google.protobuf.ITimestamp|null|undefined} createdAt
              * @memberof delivery.simulation.DeliveryRequest
              * @instance
              */
-            DeliveryRequest.prototype.arrivedAt = null;
+            DeliveryRequest.prototype.createdAt = null;
 
             /**
              * Creates a new DeliveryRequest instance using the specified properties.
@@ -1951,8 +2565,8 @@ export const delivery = $root.delivery = (() => {
                     $root.delivery.TimeWindow.encode(message.srcTimeWindow, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
                 if (message.dstTimeWindow != null && Object.hasOwnProperty.call(message, "dstTimeWindow"))
                     $root.delivery.TimeWindow.encode(message.dstTimeWindow, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
-                if (message.arrivedAt != null && Object.hasOwnProperty.call(message, "arrivedAt"))
-                    $root.google.protobuf.Timestamp.encode(message.arrivedAt, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+                if (message.createdAt != null && Object.hasOwnProperty.call(message, "createdAt"))
+                    $root.google.protobuf.Timestamp.encode(message.createdAt, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
                 return writer;
             };
 
@@ -2009,7 +2623,7 @@ export const delivery = $root.delivery = (() => {
                         message.dstTimeWindow = $root.delivery.TimeWindow.decode(reader, reader.uint32());
                         break;
                     case 8:
-                        message.arrivedAt = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                        message.createdAt = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2077,10 +2691,10 @@ export const delivery = $root.delivery = (() => {
                     if (error)
                         return "dstTimeWindow." + error;
                 }
-                if (message.arrivedAt != null && message.hasOwnProperty("arrivedAt")) {
-                    let error = $root.google.protobuf.Timestamp.verify(message.arrivedAt);
+                if (message.createdAt != null && message.hasOwnProperty("createdAt")) {
+                    let error = $root.google.protobuf.Timestamp.verify(message.createdAt);
                     if (error)
-                        return "arrivedAt." + error;
+                        return "createdAt." + error;
                 }
                 return null;
             };
@@ -2126,10 +2740,10 @@ export const delivery = $root.delivery = (() => {
                         throw TypeError(".delivery.simulation.DeliveryRequest.dstTimeWindow: object expected");
                     message.dstTimeWindow = $root.delivery.TimeWindow.fromObject(object.dstTimeWindow);
                 }
-                if (object.arrivedAt != null) {
-                    if (typeof object.arrivedAt !== "object")
-                        throw TypeError(".delivery.simulation.DeliveryRequest.arrivedAt: object expected");
-                    message.arrivedAt = $root.google.protobuf.Timestamp.fromObject(object.arrivedAt);
+                if (object.createdAt != null) {
+                    if (typeof object.createdAt !== "object")
+                        throw TypeError(".delivery.simulation.DeliveryRequest.createdAt: object expected");
+                    message.createdAt = $root.google.protobuf.Timestamp.fromObject(object.createdAt);
                 }
                 return message;
             };
@@ -2155,7 +2769,7 @@ export const delivery = $root.delivery = (() => {
                     object.dstLoc = null;
                     object.srcTimeWindow = null;
                     object.dstTimeWindow = null;
-                    object.arrivedAt = null;
+                    object.createdAt = null;
                 }
                 if (message.uuid != null && message.hasOwnProperty("uuid"))
                     object.uuid = message.uuid;
@@ -2171,8 +2785,8 @@ export const delivery = $root.delivery = (() => {
                     object.srcTimeWindow = $root.delivery.TimeWindow.toObject(message.srcTimeWindow, options);
                 if (message.dstTimeWindow != null && message.hasOwnProperty("dstTimeWindow"))
                     object.dstTimeWindow = $root.delivery.TimeWindow.toObject(message.dstTimeWindow, options);
-                if (message.arrivedAt != null && message.hasOwnProperty("arrivedAt"))
-                    object.arrivedAt = $root.google.protobuf.Timestamp.toObject(message.arrivedAt, options);
+                if (message.createdAt != null && message.hasOwnProperty("createdAt"))
+                    object.createdAt = $root.google.protobuf.Timestamp.toObject(message.createdAt, options);
                 return object;
             };
 
@@ -2188,6 +2802,324 @@ export const delivery = $root.delivery = (() => {
             };
 
             return DeliveryRequest;
+        })();
+
+        simulation.Route = (function() {
+
+            /**
+             * Properties of a Route.
+             * @memberof delivery.simulation
+             * @interface IRoute
+             * @property {string|null} [deliveryRequestUuid] Route deliveryRequestUuid
+             * @property {delivery.ILatLng|null} [srcLoc] Route srcLoc
+             * @property {delivery.ILatLng|null} [dstLoc] Route dstLoc
+             * @property {delivery.ITimeWindow|null} [timeWindow] Route timeWindow
+             * @property {delivery.IVehicleState|null} [vehicleState] Route vehicleState
+             * @property {number|null} [speedKmPerHour] Route speedKmPerHour
+             */
+
+            /**
+             * Constructs a new Route.
+             * @memberof delivery.simulation
+             * @classdesc Represents a Route.
+             * @implements IRoute
+             * @constructor
+             * @param {delivery.simulation.IRoute=} [properties] Properties to set
+             */
+            function Route(properties) {
+                if (properties)
+                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * Route deliveryRequestUuid.
+             * @member {string} deliveryRequestUuid
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.deliveryRequestUuid = "";
+
+            /**
+             * Route srcLoc.
+             * @member {delivery.ILatLng|null|undefined} srcLoc
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.srcLoc = null;
+
+            /**
+             * Route dstLoc.
+             * @member {delivery.ILatLng|null|undefined} dstLoc
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.dstLoc = null;
+
+            /**
+             * Route timeWindow.
+             * @member {delivery.ITimeWindow|null|undefined} timeWindow
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.timeWindow = null;
+
+            /**
+             * Route vehicleState.
+             * @member {delivery.IVehicleState|null|undefined} vehicleState
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.vehicleState = null;
+
+            /**
+             * Route speedKmPerHour.
+             * @member {number} speedKmPerHour
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.speedKmPerHour = 0;
+
+            /**
+             * Creates a new Route instance using the specified properties.
+             * @function create
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {delivery.simulation.IRoute=} [properties] Properties to set
+             * @returns {delivery.simulation.Route} Route instance
+             */
+            Route.create = function create(properties) {
+                return new Route(properties);
+            };
+
+            /**
+             * Encodes the specified Route message. Does not implicitly {@link delivery.simulation.Route.verify|verify} messages.
+             * @function encode
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {delivery.simulation.IRoute} message Route message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Route.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.deliveryRequestUuid != null && Object.hasOwnProperty.call(message, "deliveryRequestUuid"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.deliveryRequestUuid);
+                if (message.srcLoc != null && Object.hasOwnProperty.call(message, "srcLoc"))
+                    $root.delivery.LatLng.encode(message.srcLoc, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.dstLoc != null && Object.hasOwnProperty.call(message, "dstLoc"))
+                    $root.delivery.LatLng.encode(message.dstLoc, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.timeWindow != null && Object.hasOwnProperty.call(message, "timeWindow"))
+                    $root.delivery.TimeWindow.encode(message.timeWindow, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                if (message.vehicleState != null && Object.hasOwnProperty.call(message, "vehicleState"))
+                    $root.delivery.VehicleState.encode(message.vehicleState, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                if (message.speedKmPerHour != null && Object.hasOwnProperty.call(message, "speedKmPerHour"))
+                    writer.uint32(/* id 6, wireType 1 =*/49).double(message.speedKmPerHour);
+                return writer;
+            };
+
+            /**
+             * Encodes the specified Route message, length delimited. Does not implicitly {@link delivery.simulation.Route.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {delivery.simulation.IRoute} message Route message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Route.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a Route message from the specified reader or buffer.
+             * @function decode
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {delivery.simulation.Route} Route
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Route.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.delivery.simulation.Route();
+                while (reader.pos < end) {
+                    let tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.deliveryRequestUuid = reader.string();
+                        break;
+                    case 2:
+                        message.srcLoc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.dstLoc = $root.delivery.LatLng.decode(reader, reader.uint32());
+                        break;
+                    case 4:
+                        message.timeWindow = $root.delivery.TimeWindow.decode(reader, reader.uint32());
+                        break;
+                    case 5:
+                        message.vehicleState = $root.delivery.VehicleState.decode(reader, reader.uint32());
+                        break;
+                    case 6:
+                        message.speedKmPerHour = reader.double();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a Route message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {delivery.simulation.Route} Route
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Route.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a Route message.
+             * @function verify
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            Route.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.deliveryRequestUuid != null && message.hasOwnProperty("deliveryRequestUuid"))
+                    if (!$util.isString(message.deliveryRequestUuid))
+                        return "deliveryRequestUuid: string expected";
+                if (message.srcLoc != null && message.hasOwnProperty("srcLoc")) {
+                    let error = $root.delivery.LatLng.verify(message.srcLoc);
+                    if (error)
+                        return "srcLoc." + error;
+                }
+                if (message.dstLoc != null && message.hasOwnProperty("dstLoc")) {
+                    let error = $root.delivery.LatLng.verify(message.dstLoc);
+                    if (error)
+                        return "dstLoc." + error;
+                }
+                if (message.timeWindow != null && message.hasOwnProperty("timeWindow")) {
+                    let error = $root.delivery.TimeWindow.verify(message.timeWindow);
+                    if (error)
+                        return "timeWindow." + error;
+                }
+                if (message.vehicleState != null && message.hasOwnProperty("vehicleState")) {
+                    let error = $root.delivery.VehicleState.verify(message.vehicleState);
+                    if (error)
+                        return "vehicleState." + error;
+                }
+                if (message.speedKmPerHour != null && message.hasOwnProperty("speedKmPerHour"))
+                    if (typeof message.speedKmPerHour !== "number")
+                        return "speedKmPerHour: number expected";
+                return null;
+            };
+
+            /**
+             * Creates a Route message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {delivery.simulation.Route} Route
+             */
+            Route.fromObject = function fromObject(object) {
+                if (object instanceof $root.delivery.simulation.Route)
+                    return object;
+                let message = new $root.delivery.simulation.Route();
+                if (object.deliveryRequestUuid != null)
+                    message.deliveryRequestUuid = String(object.deliveryRequestUuid);
+                if (object.srcLoc != null) {
+                    if (typeof object.srcLoc !== "object")
+                        throw TypeError(".delivery.simulation.Route.srcLoc: object expected");
+                    message.srcLoc = $root.delivery.LatLng.fromObject(object.srcLoc);
+                }
+                if (object.dstLoc != null) {
+                    if (typeof object.dstLoc !== "object")
+                        throw TypeError(".delivery.simulation.Route.dstLoc: object expected");
+                    message.dstLoc = $root.delivery.LatLng.fromObject(object.dstLoc);
+                }
+                if (object.timeWindow != null) {
+                    if (typeof object.timeWindow !== "object")
+                        throw TypeError(".delivery.simulation.Route.timeWindow: object expected");
+                    message.timeWindow = $root.delivery.TimeWindow.fromObject(object.timeWindow);
+                }
+                if (object.vehicleState != null) {
+                    if (typeof object.vehicleState !== "object")
+                        throw TypeError(".delivery.simulation.Route.vehicleState: object expected");
+                    message.vehicleState = $root.delivery.VehicleState.fromObject(object.vehicleState);
+                }
+                if (object.speedKmPerHour != null)
+                    message.speedKmPerHour = Number(object.speedKmPerHour);
+                return message;
+            };
+
+            /**
+             * Creates a plain object from a Route message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof delivery.simulation.Route
+             * @static
+             * @param {delivery.simulation.Route} message Route
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            Route.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                let object = {};
+                if (options.defaults) {
+                    object.deliveryRequestUuid = "";
+                    object.srcLoc = null;
+                    object.dstLoc = null;
+                    object.timeWindow = null;
+                    object.vehicleState = null;
+                    object.speedKmPerHour = 0;
+                }
+                if (message.deliveryRequestUuid != null && message.hasOwnProperty("deliveryRequestUuid"))
+                    object.deliveryRequestUuid = message.deliveryRequestUuid;
+                if (message.srcLoc != null && message.hasOwnProperty("srcLoc"))
+                    object.srcLoc = $root.delivery.LatLng.toObject(message.srcLoc, options);
+                if (message.dstLoc != null && message.hasOwnProperty("dstLoc"))
+                    object.dstLoc = $root.delivery.LatLng.toObject(message.dstLoc, options);
+                if (message.timeWindow != null && message.hasOwnProperty("timeWindow"))
+                    object.timeWindow = $root.delivery.TimeWindow.toObject(message.timeWindow, options);
+                if (message.vehicleState != null && message.hasOwnProperty("vehicleState"))
+                    object.vehicleState = $root.delivery.VehicleState.toObject(message.vehicleState, options);
+                if (message.speedKmPerHour != null && message.hasOwnProperty("speedKmPerHour"))
+                    object.speedKmPerHour = options.json && !isFinite(message.speedKmPerHour) ? String(message.speedKmPerHour) : message.speedKmPerHour;
+                return object;
+            };
+
+            /**
+             * Converts this Route to JSON.
+             * @function toJSON
+             * @memberof delivery.simulation.Route
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            Route.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return Route;
         })();
 
         return simulation;

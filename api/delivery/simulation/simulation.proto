@@ -16,8 +16,9 @@ message DriverRequest {
   string uuid = 1;
   string name = 2;
   delivery.VehicleCapacity vehicle_capacity = 3;
-  delivery.LatLng loc = 4;
-  google.protobuf.Timestamp created_at = 5;
+  double max_speed_km_per_hour = 4;
+  delivery.LatLng loc = 5;
+  google.protobuf.Timestamp created_at = 6;
 }
 
 
@@ -29,5 +30,14 @@ message DeliveryRequest {
   delivery.LatLng dst_loc = 5;
   delivery.TimeWindow src_time_window = 6;
   delivery.TimeWindow dst_time_window = 7;
-  google.protobuf.Timestamp arrived_at = 8;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message Route {
+  string delivery_request_uuid = 1;
+  delivery.LatLng src_loc = 2;
+  delivery.LatLng dst_loc = 3;
+  delivery.TimeWindow time_window = 4;
+  delivery.VehicleState vehicle_state = 5;
+  double speed_km_per_hour = 6;
 }
