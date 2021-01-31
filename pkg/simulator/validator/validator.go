@@ -10,18 +10,18 @@ import (
 
 var (
 	errMissingCreatedAt       = errors.New("missing created_at")
-	errMissingArrivedAt       = errors.New("missing arrived_at")
 	errMissingDstTimeWindow   = errors.New("missing dst_time_window")
 	errMissingGoodsMetadata   = errors.New("missing goods_metadata")
 	errMissingVehicleCapacity = errors.New("missing vehicle_capacity")
 
-	errCreatedAtAfterArrivedAt = errors.New("created_at after arrived_at")
+	errSimulationRequestCreatedAtAfterDeliveryRequestCreatedAt = errors.New("simulation request created_at after delivery request created_at")
 
 	errInvalidTimeWindow = errors.New("invalid time window")
 	errInvalidLength     = errors.New("invalid length")
 	errInvalidWidth      = errors.New("invalid width")
 	errInvalidHeight     = errors.New("invalid height")
 	errInvalidWeight     = errors.New("invalid weight")
+	errInvalidMaxSpeed   = errors.New("invalid max speed for vehicle")
 )
 
 func ValidateSimulationRequest(simulationRequest *simulation.SimulationRequest) error {
@@ -36,8 +36,8 @@ func ValidateSimulationRequest(simulationRequest *simulation.SimulationRequest) 
 			return err
 		}
 
-		if createdAt.AsTime().After(req.GetArrivedAt().AsTime()) {
-			return errCreatedAtAfterArrivedAt
+		if createdAt.AsTime().After(req.GetCreatedAt().AsTime()) {
+			return errSimulationRequestCreatedAtAfterDeliveryRequestCreatedAt
 		}
 	}
 
@@ -45,6 +45,9 @@ func ValidateSimulationRequest(simulationRequest *simulation.SimulationRequest) 
 	for _, driver := range drivers {
 		if err := isValidUUID(driver.GetUuid()); err != nil {
 			return err
+		}
+		if driver.GetMaxSpeedKmPerHour() <= 0 {
+			return errInvalidMaxSpeed
 		}
 		vehicleCapcity := driver.GetVehicleCapacity()
 		if vehicleCapcity == nil {
@@ -77,9 +80,9 @@ func validateDeliveryRequest(deliveryRequest *simulation.DeliveryRequest) error 
 	if err := isValidUUID(deliveryRequest.GetUuid()); err != nil {
 		return err
 	}
-	arrivedAt := deliveryRequest.GetArrivedAt()
-	if arrivedAt == nil {
-		return errMissingArrivedAt
+	createdAt := deliveryRequest.GetCreatedAt()
+	if createdAt == nil {
+		return errMissingCreatedAt
 	}
 
 	dstW := deliveryRequest.GetDstTimeWindow()
