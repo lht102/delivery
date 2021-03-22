@@ -1,9 +1,9 @@
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
-# github.com/go-chi/chi v4.1.2+incompatible
+# github.com/go-chi/chi/v5 v5.0.1
 ## explicit
-github.com/go-chi/chi
-github.com/go-chi/chi/middleware
+github.com/go-chi/chi/v5
+github.com/go-chi/chi/v5/middleware
 # github.com/golang-migrate/migrate/v4 v4.12.2
 ## explicit
 github.com/golang-migrate/migrate/v4
@@ -36,9 +36,6 @@ github.com/hashicorp/hcl/json/token
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/looplab/fsm v0.2.0
-## explicit
-github.com/looplab/fsm
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mitchellh/mapstructure v1.1.2
@@ -100,10 +97,10 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
-# github.com/uber/h3-go v0.0.0-20200820000214-f97962ae5e59
+# github.com/uber/h3-go/v3 v3.7.1
 ## explicit
-github.com/uber/h3-go
-# github.com/xo/dburl v0.0.0-20200727080105-4a02649c2fea
+github.com/uber/h3-go/v3
+# github.com/xo/dburl v0.4.0
 ## explicit
 github.com/xo/dburl
 # go.opencensus.io v0.22.4

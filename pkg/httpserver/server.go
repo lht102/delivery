@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/lht102/delivery/pkg/distance"
 	"github.com/lht102/delivery/pkg/models"
 )

@@ -9,7 +9,7 @@ import (
 	"github.com/lht102/delivery/api/delivery/simulation"
 	"github.com/lht102/delivery/pkg/binpack"
 	"github.com/lht102/delivery/pkg/distance"
-	"github.com/uber/h3-go"
+	"github.com/uber/h3-go/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

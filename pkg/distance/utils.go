@@ -1,6 +1,8 @@
 package distance
 
-import "time"
+import (
+	"time"
+)
 
 func CalculateTravelingTime(srcLat, srcLng, dstLat, dstLng, speedKmPerHour float64) time.Duration {
 	return time.Duration(0)

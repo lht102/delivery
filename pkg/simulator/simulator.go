@@ -6,7 +6,7 @@ import (
 
 	"github.com/lht102/delivery/api/delivery"
 	"github.com/lht102/delivery/api/delivery/simulation"
-	"github.com/uber/h3-go"
+	"github.com/uber/h3-go/v3"
 )
 
 var (
