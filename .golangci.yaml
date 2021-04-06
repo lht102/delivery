@@ -1,0 +1,34 @@
+run:
+  tests: false
+  timeout: 5m
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - govet
+    - staticcheck
+    - deadcode
+    - errcheck
+    - gosimple
+    - ineffassign
+    - structcheck
+    - unused
+    - varcheck
+    - gosec
+    - bodyclose
+    - exhaustive
+    - exportloopref
+    - noctx
+    - goconst
+    - noctx
+    - unparam
+    - unconvert
+    - interfacer
+    - misspell
+    - dogsled
+    - dupl
+    - prealloc
+    - gocritic
+    - scopelint
+    - maligned

@@ -23,3 +23,7 @@ func GetPSQLDBConfig() pqconnector.Config {
 		SSLMode:  v.GetString(static.PostgresSSLMode),
 	}
 }
+
+func GetGoogleMapAPIKey() string {
+	return v.GetString(static.GoogleMapAPIKey)
+}

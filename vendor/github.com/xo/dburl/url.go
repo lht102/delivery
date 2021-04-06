@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// URL wraps the standard net/url.URL type, adding OriginalScheme, Proto,
+// URL wraps the standard net/url.URL type, adding OriginalScheme, Transport,
 // Driver, and DSN strings.
 type URL struct {
 	// URL is the base net/url/URL.
@@ -14,8 +14,9 @@ type URL struct {
 	// OriginalScheme is the original parsed scheme (ie, "sq", "mysql+unix", "sap", etc).
 	OriginalScheme string
 
-	// Proto is the specified protocol (ie, "tcp", "udp", "unix"), if provided.
-	Proto string
+	// Transport is the specified transport protocol (ie, "tcp", "udp",
+	// "unix", ...), if provided.
+	Transport string
 
 	// Driver is the non-aliased SQL driver name that should be used in a call
 	// to sql/Open.
@@ -36,7 +37,7 @@ type URL struct {
 	hostPortDB []string
 }
 
-// Parse parses urlstr, returning a URL with the OriginalScheme, Proto, Driver,
+// Parse parses urlstr, returning a URL with the OriginalScheme, Transport, Driver,
 // Unaliased, and DSN fields populated.
 //
 // Note: if urlstr has a Opaque component (ie, URLs not specified as "scheme://"
@@ -52,24 +53,20 @@ func Parse(urlstr string) (*URL, error) {
 	if u.Scheme == "" {
 		return nil, ErrInvalidDatabaseScheme
 	}
-
 	// create url
-	v := &URL{URL: *u, OriginalScheme: urlstr[:len(u.Scheme)], Proto: "tcp"}
-
-	// check for +protocol in scheme
-	var checkProto bool
+	v := &URL{URL: *u, OriginalScheme: urlstr[:len(u.Scheme)], Transport: "tcp"}
+	// check for +transport in scheme
+	var checkTransport bool
 	if i := strings.IndexRune(v.Scheme, '+'); i != -1 {
-		v.Proto = urlstr[i+1 : len(u.Scheme)]
+		v.Transport = urlstr[i+1 : len(u.Scheme)]
 		v.Scheme = v.Scheme[:i]
-		checkProto = true
+		checkTransport = true
 	}
-
 	// get dsn generator
 	scheme, ok := schemeMap[v.Scheme]
 	if !ok {
 		return nil, ErrUnknownDatabaseScheme
 	}
-
 	// if scheme does not understand opaque URLs, retry parsing after making a fully
 	// qualified URL
 	if !scheme.Opaque && v.Opaque != "" {
@@ -84,45 +81,37 @@ func Parse(urlstr string) (*URL, error) {
 
 		return Parse(v.OriginalScheme + "://" + v.Opaque + q + f)
 	}
-
 	if scheme.Opaque && v.Opaque == "" {
 		// force Opaque
 		v.Opaque, v.Host, v.Path, v.RawPath = v.Host+v.Path, "", "", ""
 	} else if v.Host == "." || (v.Host == "" && strings.TrimPrefix(v.Path, "/") != "") {
 		// force unix proto
-		v.Proto = "unix"
+		v.Transport = "unix"
 	}
-
 	// check proto
-	if checkProto || v.Proto != "tcp" {
-		if scheme.Proto == ProtoNone {
+	if checkTransport || v.Transport != "tcp" {
+		if scheme.Transport == TransportNone {
 			return nil, ErrInvalidTransportProtocol
 		}
-
 		switch {
-		case scheme.Proto&ProtoAny != 0 && v.Proto != "":
-		case scheme.Proto&ProtoTCP != 0 && v.Proto == "tcp":
-		case scheme.Proto&ProtoUDP != 0 && v.Proto == "udp":
-		case scheme.Proto&ProtoUnix != 0 && v.Proto == "unix":
-
+		case scheme.Transport&TransportAny != 0 && v.Transport != "",
+			scheme.Transport&TransportTCP != 0 && v.Transport == "tcp",
+			scheme.Transport&TransportUDP != 0 && v.Transport == "udp",
+			scheme.Transport&TransportUnix != 0 && v.Transport == "unix":
 		default:
 			return nil, ErrInvalidTransportProtocol
 		}
 	}
-
 	// set driver
-	v.Driver = scheme.Driver
-	v.Unaliased = scheme.Driver
+	v.Driver, v.Unaliased = scheme.Driver, scheme.Driver
 	if scheme.Override != "" {
 		v.Driver = scheme.Override
 	}
-
 	// generate dsn
 	v.DSN, err = scheme.Generator(v)
 	if err != nil {
 		return nil, err
 	}
-
 	return v, nil
 }
 
@@ -138,7 +127,6 @@ func (u *URL) String() string {
 		RawQuery: u.RawQuery,
 		Fragment: u.Fragment,
 	}
-
 	return p.String()
 }
 
@@ -147,78 +135,60 @@ func (u *URL) Short() string {
 	if u.Scheme == "" {
 		return ""
 	}
-
 	s := schemeMap[u.Scheme].Aliases[0]
-
 	if u.Scheme == "odbc" || u.Scheme == "oleodbc" {
-		n := u.Proto
+		n := u.Transport
 		if v, ok := schemeMap[n]; ok {
 			n = v.Aliases[0]
 		}
 		s += "+" + n
-	} else if u.Proto != "tcp" {
-		s += "+" + u.Proto
+	} else if u.Transport != "tcp" {
+		s += "+" + u.Transport
 	}
-
 	s += ":"
-
 	if u.User != nil {
-		if un := u.User.Username(); un != "" {
-			s += un + "@"
+		if n := u.User.Username(); n != "" {
+			s += n + "@"
 		}
 	}
-
 	if u.Host != "" {
 		s += u.Host
 	}
-
 	if u.Path != "" && u.Path != "/" {
 		s += u.Path
 	}
-
 	if u.Opaque != "" {
 		s += u.Opaque
 	}
-
 	return s
 }
 
 // Normalize returns the driver, host, port, database, and user name of a URL,
 // joined with sep, populating blank fields with empty.
 func (u *URL) Normalize(sep, empty string, cut int) string {
-	s := make([]string, 5)
-
-	s[0] = u.Unaliased
-	if u.Proto != "tcp" && u.Proto != "unix" {
-		s[0] += "+" + u.Proto
+	s := []string{u.Unaliased, "", "", "", ""}
+	if u.Transport != "tcp" && u.Transport != "unix" {
+		s[0] += "+" + u.Transport
 	}
-
 	// set host port dbname fields
 	if u.hostPortDB == nil {
 		if u.Opaque != "" {
 			u.hostPortDB = []string{u.Opaque, "", ""}
 		} else {
-			u.hostPortDB = []string{
-				hostname(u.Host),
-				hostport(u.Host),
-				strings.TrimPrefix(u.Path, "/"),
-			}
+			u.hostPortDB = []string{u.Hostname(), u.Port(), strings.TrimPrefix(u.Path, "/")}
 		}
 	}
 	copy(s[1:], u.hostPortDB)
-
 	// set user
 	if u.User != nil {
 		s[4] = u.User.Username()
 	}
-
 	// replace blank entries ...
 	for i := 0; i < len(s); i++ {
 		if s[i] == "" {
 			s[i] = empty
 		}
 	}
-
 	if cut > 0 {
 		// cut to only populated fields
 		i := len(s) - 1
@@ -229,7 +199,5 @@ func (u *URL) Normalize(sep, empty string, cut int) string {
 		}
 		s = s[:i]
 	}
-
-	// join
 	return strings.Join(s, sep)
 }

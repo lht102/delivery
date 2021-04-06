@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package delivery;
+option go_package = "github.com/lht102/delivery/api/delivery";
+
+import "google/protobuf/timestamp.proto";
+
+message LatLng {
+  double lat = 1;
+  double lng = 2;
+}
+
+message VehicleCapacity {
+  int32 weight = 1;
+  int32 length = 2;
+  int32 width = 3;
+  int32 height = 4;
+}
+
+message GoodsMetadata {
+  string name = 1;
+  int32 weight = 2;
+  int32 length = 3;
+  int32 width = 4;
+  int32 height = 5;
+}
+
+message TimeWindow {
+  google.protobuf.Timestamp started_at = 1;
+  google.protobuf.Timestamp ended_at = 2;
+}
+
+enum DriverStatus {
+  DRIVER_STATUS_UNDEFINED = 0;
+  DRIVER_STATUS_OFFLINE = 1;
+  DRIVER_STATUS_AVAILABLE = 2;
+  DRIVER_STATUS_SERVING = 3;
+}
+
+message VehicleState {
+  VehicleCapacity vehicle_capacity = 1;
+  repeated BoxItem box_items = 2;
+}
+
+enum RotationType {
+	Rotation_Type_WLH = 0;
+	Rotation_Type_LWH = 1;
+	Rotation_Type_LHW = 2;
+	Rotation_Type_HLW = 3;
+	Rotation_Type_HWL = 4;
+	Rotation_Type_WHL = 5;
+}
+
+message BoxItem {
+  int32 weight = 1;
+  int32 width = 2;
+  int32 length = 3;
+  int32 height = 4;
+  RotationType rotation_type = 5;
+  repeated int32 pos = 6;
+}

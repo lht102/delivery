@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package delivery.simulation;
+option go_package = "github.com/lht102/delivery/api/delivery/simulation";
+
+import "delivery/models.proto";
+import "google/protobuf/timestamp.proto";
+
+message SimulationRequest {
+  repeated DeliveryRequest delivery_requests = 1;
+  repeated DriverRequest driver_requests = 2;
+  google.protobuf.Timestamp created_at = 3;
+
+  // options
+  bool support_retracement = 4;
+}
+
+message SimulationResponse {
+  map<string, DriverRoutingDetails> driver_routing_details_by_uuid = 1;
+  double running_time = 2;
+}
+
+message DriverRoutingDetails {
+  string name = 1;
+  repeated Route routes = 2;
+}
+
+message DriverRequest {
+  string uuid = 1;
+  string name = 2;
+  delivery.VehicleCapacity vehicle_capacity = 3;
+  double max_speed_km_per_hour = 4;
+  delivery.LatLng loc = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message DeliveryRequest {
+  string uuid = 1;
+  string name = 2;
+  delivery.GoodsMetadata goods_metadata = 3;
+  delivery.LatLng src_loc = 4;
+  delivery.LatLng dst_loc = 5;
+  delivery.TimeWindow src_time_window = 6;
+  delivery.TimeWindow dst_time_window = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message Route {
+  string delivery_request_uuid = 1;
+  delivery.LatLng src_loc = 2;
+  delivery.LatLng dst_loc = 3;
+  delivery.TimeWindow time_window = 4;
+  delivery.VehicleState vehicle_state = 5;
+  double speed_km_per_hour = 6;
+  bool is_req_src = 7;
+  bool is_req_dst = 8;
+}

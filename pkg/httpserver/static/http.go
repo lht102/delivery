@@ -1,6 +1,6 @@
 package static
 
 const (
-	ContentTypeKey       = "ContentType"
+	ContentTypeKey       = "Content-Type"
 	ContentTypeValueJSON = "application/json; charset=utf-8"
 )

@@ -7,7 +7,7 @@ APP_NAME = `basename ${PWD}`
 
 GOFLAGS = -mod=vendor
 MIGRATION_PATH = ./migrations/postgres
-LOCAL_PACKAGES = `go list ./... | egrep -v "vendor|mocks"`
+LOCAL_PACKAGES = `go list ./... | egrep -v "vendor|mocks|api"`
 DB_SOURCE = "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable"
 
 .PHONY: dep
@@ -17,7 +17,11 @@ dep:
 
 .PHONY: static-check
 static-check:
-	staticcheck ${LOCAL_PACKAGES} 
+	staticcheck ${LOCAL_PACKAGES}
+
+.PHONY: lint
+lint:
+	golangci-lint run
 
 .PHONY: test-all-packages
 test-all-packages:
@@ -28,7 +32,7 @@ test-coverage:
 	gocov convert c.out | gocov report
 
 .PHONY: test
-test: static-check test-all-packages test-coverage
+test: static-check lint test-all-packages test-coverage
 
 .PHONY: build
 build:
@@ -82,3 +86,19 @@ models:
 	@mkdir -p pkg/models
 	@xo $(DB_SOURCE) -o pkg/models
 	@go build ./pkg/models
+
+.PHONY: proto
+proto:
+	@find api/ -name "*.pb.go" -type f -delete
+	protoc --proto_path=api --go_out=api --go_opt=paths=source_relative \
+		api/errmsg/*.proto \
+		api/delivery/*.proto \
+		api/delivery/simulation/*.proto
+	
+	@rm -rf build/api/js
+	@mkdir -p build/api/js
+	pbjs -t static-module -w es6 --es6 -o build/api/js/compiled.js \
+		api/errmsg/*.proto \
+		api/delivery/*.proto \
+		api/delivery/simulation/*.proto
+	pbts -o build/api/js/compiled.d.ts build/api/js/compiled.js
