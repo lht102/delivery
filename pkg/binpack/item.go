@@ -2,6 +2,8 @@ package binpack
 
 import (
 	"math"
+
+	"github.com/google/uuid"
 )
 
 type RotationType int
@@ -19,7 +21,9 @@ const (
 	RotationTypeHLW
 	RotationTypeHWL
 	RotationTypeWHL
+)
 
+const (
 	WidthAxis Axis = iota
 	LengthAxis
 	HeightAxis
@@ -66,7 +70,7 @@ func NewItemWithUUID(uuid string, weight, width, length, height int) *Item {
 
 func NewItem(weight, width, length, height int) *Item {
 	return &Item{
-		uuid:   "",
+		uuid:   uuid.NewString(),
 		weight: weight,
 		width:  width,
 		length: length,

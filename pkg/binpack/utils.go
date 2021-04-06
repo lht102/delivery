@@ -7,7 +7,6 @@ func BoxItemsToAPIBoxItems(boxItems []*BoxItem) []*delivery.BoxItem {
 	for i, boxItem := range boxItems {
 		pos := boxItem.Position()
 		apiBoxItems[i] = &delivery.BoxItem{
-			Uuid:         boxItem.Uuid(),
 			Weight:       int32(boxItem.Weight()),
 			Width:        int32(boxItem.Width()),
 			Height:       int32(boxItem.Height()),

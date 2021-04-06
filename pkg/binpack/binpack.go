@@ -45,6 +45,28 @@ func NewBox(weight, width, length, height int) Packer {
 	}
 }
 
+func NewBoxCopy(box *Box) *Box {
+	boxItems := box.BoxItems()
+	boxItemByID := make(map[string]*BoxItem, len(box.boxItemByID))
+	for k, v := range box.boxItemByID {
+		boxItemByID[k] = newBoxItemCopy(v)
+	}
+	tmpValidBoxItemByID := make(map[string]*BoxItem, len(box.tmpValidBoxItemByID))
+	for k, v := range box.tmpValidBoxItemByID {
+		tmpValidBoxItemByID[k] = newBoxItemCopy(v)
+	}
+	return &Box{
+		weight:              box.weight,
+		width:               box.width,
+		length:              box.length,
+		height:              box.height,
+		usedWeight:          box.usedWeight,
+		boxItems:            boxItems,
+		boxItemByID:         boxItemByID,
+		tmpValidBoxItemByID: tmpValidBoxItemByID,
+	}
+}
+
 func (b *Box) Weight() int {
 	return b.weight
 }
@@ -69,6 +91,7 @@ func (b *Box) isValid(item *Item, p Position) error {
 	boxItem := &BoxItem{
 		item: item,
 	}
+	boxItem.pos = p
 	for i := 0; i < 6; i++ {
 		boxItem.rotationType = RotationType(i)
 		d := boxItem.Dimension()
@@ -167,8 +190,8 @@ func (b *Box) RemoveItem(id string) error {
 
 func (b *Box) BoxItems() []*BoxItem {
 	boxItems := []*BoxItem{}
-	for _, bi := range b.boxItems {
-		boxItems = append(boxItems, bi)
+	for _, boxItem := range b.boxItems {
+		boxItems = append(boxItems, newBoxItemCopy(boxItem))
 	}
 	return boxItems
 }
@@ -179,4 +202,12 @@ func (b *Box) items() []*Item {
 		items = append(items, it.item)
 	}
 	return items
+}
+
+func newBoxItemCopy(boxItem *BoxItem) *BoxItem {
+	return &BoxItem{
+		item:         boxItem.item,
+		pos:          boxItem.Position(),
+		rotationType: boxItem.rotationType,
+	}
 }
