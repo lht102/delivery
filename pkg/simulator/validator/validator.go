@@ -103,9 +103,6 @@ func validateDeliveryRequest(deliveryRequest *simulation.DeliveryRequest) error 
 	if goodsMetadata == nil {
 		return errMissingGoodsMetadata
 	}
-	if err := isValidUUID(goodsMetadata.GetUuid()); err != nil {
-		return err
-	}
 	if goodsMetadata.GetLength() <= 0 {
 		return errInvalidLength
 	}

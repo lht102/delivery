@@ -2,8 +2,10 @@ package simulator
 
 import (
 	"errors"
-	"log"
+	"math"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/lht102/delivery/api/delivery"
 	"github.com/lht102/delivery/api/delivery/simulation"
@@ -13,44 +15,37 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type DriverEvent string
-
-type DriverStatus string
-
-const (
-	driverStatusUndefined DriverStatus = "DRIVER_STATUS_UNDEFINED"
-	driverStatusOffline                = "DRIVER_STATUS_OFFLINE"
-	driverStatusAvailable              = "DRIVER_STATUS_AVAILABLE"
-	driverStatusServing                = "DRIVER_STATUS_SERVING"
-
-	driverEventTakeRequest   DriverEvent = "DRIVER_EVENT_TAKE_REQUEST"
-	driverEventFinishRequest             = "DRIVER_EVENT_FINISH_REQUEST"
-)
-
 var (
 	errExceedTimeWindow = errors.New("exceed time window constraint")
 )
 
 type DriverState struct {
 	uuid                  string
+	name                  string
 	vehicleCapacity       *delivery.VehicleCapacity
 	maxSpeedKmPerHour     float64
 	numOfServingRequests  int
 	status                delivery.DriverStatus
 	packer                binpack.Packer
-	geoIndex              h3.H3Index
-	loc                   *delivery.LatLng
+	curGeoIndex           h3.H3Index
+	curLoc                *delivery.LatLng
 	servingRequestsByUUID map[string]*simulation.DeliveryRequest
 	unfinishedRoutes      []*simulation.Route
 	finishedRoutes        []*simulation.Route
 	createdAt             time.Time
 	driverUUIDByGeoIndex  map[h3.H3Index]string
 	lastUpdatedTime       time.Time
+	logger                *zap.Logger
 }
 
-func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, driverUUIDByGeoIndex map[h3.H3Index]string) *DriverState {
+type routesPackerPair struct {
+	routes []*simulation.Route
+	packer binpack.Packer
+}
+
+func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, driverUUIDByGeoIndex map[h3.H3Index]string, logger *zap.Logger) *DriverState {
 	var status delivery.DriverStatus
-	if driverRequest.GetCreatedAt().AsTime().UTC().Unix() > int64(curTime.UTC().Unix()) {
+	if driverRequest.GetCreatedAt().AsTime().Unix() > curTime.Unix() {
 		status = delivery.DriverStatus_DRIVER_STATUS_OFFLINE
 	} else {
 		status = delivery.DriverStatus_DRIVER_STATUS_AVAILABLE
@@ -61,19 +56,24 @@ func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, 
 		Latitude:  loc.GetLat(),
 		Longitude: loc.GetLng(),
 	}
+	geoIndex := h3.FromGeo(geo, h3Resolution)
+	driverUUIDByGeoIndex[geoIndex] = driverRequest.GetUuid()
 	return &DriverState{
 		uuid:                  driverRequest.GetUuid(),
+		name:                  driverRequest.GetName(),
 		vehicleCapacity:       driverRequest.GetVehicleCapacity(),
 		maxSpeedKmPerHour:     driverRequest.GetMaxSpeedKmPerHour(),
 		status:                status,
 		packer:                binpack.NewBox(int(vehicleCapacity.GetWeight()), int(vehicleCapacity.GetWidth()), int(vehicleCapacity.GetLength()), int(vehicleCapacity.GetHeight())),
-		geoIndex:              h3.FromGeo(geo, h3Resolution),
-		loc:                   loc,
+		curGeoIndex:           h3.FromGeo(geo, h3Resolution),
+		curLoc:                loc,
 		servingRequestsByUUID: map[string]*simulation.DeliveryRequest{},
 		unfinishedRoutes:      []*simulation.Route{},
 		finishedRoutes:        []*simulation.Route{},
 		createdAt:             driverRequest.GetCreatedAt().AsTime(),
+		driverUUIDByGeoIndex:  driverUUIDByGeoIndex,
 		lastUpdatedTime:       curTime,
+		logger:                logger,
 	}
 }
 
@@ -89,50 +89,49 @@ func (ds *DriverState) updateInternalStateWithTime(curTime time.Time) {
 		return
 	}
 	finishRouteCnt := 0
-	curLoc := ds.loc
-	var prevRequestID string
+	curLoc := ds.curLoc
 	for _, route := range ds.unfinishedRoutes {
-		if prevRequestID != "" && prevRequestID != route.GetDeliveryRequestUuid() {
-			ds.numOfServingRequests--
-			err := ds.packer.RemoveItem(prevRequestID)
-			if err != nil {
-				log.Println("packer", err)
-			}
-		}
-		prevRequestID = route.GetDeliveryRequestUuid()
-		tw := route.GetTimeWindow()
-		if curTime.UTC().Unix() >= tw.GetEndedAt().AsTime().UTC().Unix() {
-			ds.finishedRoutes = append(ds.finishedRoutes, route)
-			curLoc = route.GetDstLoc()
-			finishRouteCnt++
-		} else {
+		if curTime.UTC().Unix() < route.GetTimeWindow().GetEndedAt().AsTime().UTC().Unix() {
 			break
+		}
+		ds.finishedRoutes = append(ds.finishedRoutes, route)
+		curLoc = route.GetDstLoc()
+		finishRouteCnt++
+		if route.GetIsReqDst() {
+			ds.numOfServingRequests--
+			delete(ds.servingRequestsByUUID, route.GetDeliveryRequestUuid())
+			err := ds.packer.RemoveItem(route.GetDeliveryRequestUuid())
+			if err != nil {
+				ds.logger.Error("driver failed to remove item", zap.String("driver_uuid", ds.uuid), zap.String("delivery_request_uuid", route.GetDeliveryRequestUuid()))
+			}
 		}
 	}
 	ds.unfinishedRoutes = ds.unfinishedRoutes[finishRouteCnt:]
 
 	if len(ds.unfinishedRoutes) == 0 {
-		ds.loc = curLoc
+		ds.curLoc = curLoc
 		ds.status = delivery.DriverStatus_DRIVER_STATUS_AVAILABLE
 	} else {
 		currentUnfinishedRoute := ds.unfinishedRoutes[0]
 		nextLoc := currentUnfinishedRoute.GetDstLoc()
-		midLat, midLng := distance.CalculateMiddleLocation(curLoc.GetLat(), curLoc.GetLng(), nextLoc.GetLat(), nextLoc.GetLng(),
+		midLat, midLng := distance.CalculateIntermediatePointWithTimeWindow(
+			curLoc.GetLat(), curLoc.GetLng(),
+			nextLoc.GetLat(), nextLoc.GetLng(),
 			currentUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(),
 			currentUnfinishedRoute.GetTimeWindow().GetEndedAt().AsTime(),
 			curTime)
-		ds.loc = &delivery.LatLng{
+		ds.curLoc = &delivery.LatLng{
 			Lat: midLat,
 			Lng: midLng,
 		}
 	}
-	delete(ds.driverUUIDByGeoIndex, ds.geoIndex)
+	delete(ds.driverUUIDByGeoIndex, ds.curGeoIndex)
 	geo := h3.GeoCoord{
-		Latitude:  ds.loc.GetLat(),
-		Longitude: ds.loc.GetLng(),
+		Latitude:  ds.curLoc.GetLat(),
+		Longitude: ds.curLoc.GetLng(),
 	}
-	ds.geoIndex = h3.FromGeo(geo, h3Resolution)
-	ds.driverUUIDByGeoIndex[ds.geoIndex] = ds.uuid
+	ds.curGeoIndex = h3.FromGeo(geo, h3Resolution)
+	ds.driverUUIDByGeoIndex[ds.curGeoIndex] = ds.uuid
 }
 
 func (ds *DriverState) Status() delivery.DriverStatus {
@@ -143,77 +142,143 @@ func (ds *DriverState) NumOfServingRequests() int {
 	return ds.numOfServingRequests
 }
 
-func (ds *DriverState) HandleDeliveryRequest(curTime time.Time, request *simulation.DeliveryRequest) error {
-	if ds.lastUpdatedTime.UTC().Unix() != curTime.UTC().Unix() {
-		ds.updateInternalStateWithTime(curTime)
+func findSuitableRoutingPackerPair(routesPackerPairs []routesPackerPair) (routesPackerPair, error) {
+	if len(routesPackerPairs) == 0 {
+		return routesPackerPair{}, errors.New("not able to handle incoming request")
 	}
-	if ds.Status() == delivery.DriverStatus_DRIVER_STATUS_AVAILABLE {
-		srcLoc := request.GetSrcLoc()
-		srcTD := request.GetSrcTimeWindow()
-		dstLoc := request.GetDstLoc()
-		dstTD := request.GetDstTimeWindow()
 
-		td1, speed1, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, srcTD, ds.loc, srcLoc, ds.maxSpeedKmPerHour)
-		if err != nil {
-			return err
+	minDuration := int64(math.MaxInt64)
+	res := routesPackerPairs[0]
+	for _, p := range routesPackerPairs {
+		sumOfDuration := int64(0)
+		for _, r := range p.routes {
+			d := r.GetTimeWindow().GetEndedAt().GetSeconds() - r.GetTimeWindow().GetStartedAt().GetSeconds()
+			sumOfDuration += d
 		}
-		r1 := &simulation.Route{
-			DeliveryRequestUuid: request.GetUuid(),
-			SrcLoc:              ds.loc,
-			DstLoc:              srcLoc,
-			TimeWindow:          td1,
-			VehicleState: &delivery.VehicleState{
-				VehicleCapacity: ds.vehicleCapacity,
-				BoxItems:        binpack.BoxItemsToAPIBoxItems(ds.packer.BoxItems()),
-			},
-			SpeedKmPerHour: speed1,
+		if sumOfDuration < minDuration {
+			minDuration = sumOfDuration
+			res = p
 		}
-		td2, speed2, err := calculateRequiredTimeWindowAndSpeedKmPerHour(td1.GetEndedAt().AsTime(), dstTD, srcLoc, dstLoc, ds.maxSpeedKmPerHour)
-		if err != nil {
-			return err
-		}
-		err = ds.packer.AddItem(binpack.NewItemWithUUID(
-			request.GetUuid(),
-			int(request.GetGoodsMetadata().GetWeight()),
-			int(request.GetGoodsMetadata().GetWidth()),
-			int(request.GetGoodsMetadata().GetLength()),
-			int(request.GetGoodsMetadata().GetHeight()),
-		))
-		if err != nil {
-			return err
-		}
-		r2 := &simulation.Route{
-			DeliveryRequestUuid: request.GetUuid(),
-			SrcLoc:              srcLoc,
-			DstLoc:              dstLoc,
-			TimeWindow:          td2,
-			VehicleState: &delivery.VehicleState{
-				VehicleCapacity: ds.vehicleCapacity,
-				BoxItems:        binpack.BoxItemsToAPIBoxItems(ds.packer.BoxItems()),
-			},
-			SpeedKmPerHour: speed2,
-		}
-		ds.unfinishedRoutes = append(ds.unfinishedRoutes, r1, r2)
-	} else if ds.Status() == delivery.DriverStatus_DRIVER_STATUS_SERVING {
-
 	}
-	return nil
+	return res, nil
 }
 
-func calculateRequiredTimeWindowAndSpeedKmPerHour(curTime time.Time, restrictedTimewindow *delivery.TimeWindow, curLoc *delivery.LatLng, dstLoc *delivery.LatLng, maxSpeedKmPerHour float64) (*delivery.TimeWindow, float64, error) {
-	curLocToSrcLocRequiredDuration := distance.CalculateTravelingTime(curLoc.GetLat(), curLoc.GetLng(), dstLoc.GetLat(), dstLoc.GetLng(), maxSpeedKmPerHour)
-	if curTime.Add(curLocToSrcLocRequiredDuration).After(restrictedTimewindow.GetEndedAt().AsTime()) {
+func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
+	// S(i) -> S(i+1) -> D(i+1) -> D(i)
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetDstLoc(), request.GetSrcLoc(), nil, false)
+	if err != nil {
+		return nil, err
+	}
+	r2, err := ds.getRoute(r1.GetTimeWindow().GetEndedAt().AsTime(), request, request.GetDstTimeWindow(), request.GetSrcLoc(), request.GetDstLoc(), newItemWithRequest(request), true)
+	if err != nil {
+		return nil, err
+	}
+	err = ds.packer.RemoveItem(request.GetUuid())
+	if err != nil {
+		return nil, err
+	}
+	lastRequest := ds.servingRequestsByUUID[lastUnfinishedRoute.GetDeliveryRequestUuid()]
+	r3, err := ds.getRoute(r2.GetTimeWindow().GetEndedAt().AsTime(), lastRequest, lastRequest.GetDstTimeWindow(), request.GetDstLoc(), lastRequest.GetDstLoc(), nil, true)
+	if err != nil {
+		return nil, err
+	}
+	return []*simulation.Route{r1, r2, r3}, nil
+}
+
+func (ds *DriverState) handleDeliveryRequestWithRoutingMethodTwo(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
+	// S(i) -> S(i+1) -> D(i) -> D(i+1)
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetDstLoc(), request.GetSrcLoc(), nil, false)
+	if err != nil {
+		return nil, err
+	}
+	lastRequest := ds.servingRequestsByUUID[lastUnfinishedRoute.GetDeliveryRequestUuid()]
+	r2, err := ds.getRoute(r1.GetTimeWindow().GetEndedAt().AsTime(), lastRequest, lastRequest.GetDstTimeWindow(), request.GetSrcLoc(), lastRequest.GetDstLoc(), newItemWithRequest(request), true)
+	if err != nil {
+		return nil, err
+	}
+	err = ds.packer.RemoveItem(lastRequest.GetUuid())
+	if err != nil {
+		return nil, err
+	}
+	r3, err := ds.getRoute(r2.GetTimeWindow().GetEndedAt().AsTime(), request, request.GetDstTimeWindow(), lastRequest.GetDstLoc(), request.GetDstLoc(), nil, true)
+	if err != nil {
+		return nil, err
+	}
+	return []*simulation.Route{r1, r2, r3}, nil
+}
+
+func (ds *DriverState) handleDeliveryRequestWithDefaultRouting(startTime time.Time, request *simulation.DeliveryRequest, startLoc *delivery.LatLng) ([]*simulation.Route, error) {
+	srcLoc := request.GetSrcLoc()
+	srcTW := request.GetSrcTimeWindow()
+	dstLoc := request.GetDstLoc()
+	dstTW := request.GetDstTimeWindow()
+
+	r1, err := ds.getRoute(startTime, request, srcTW, startLoc, srcLoc, nil, false)
+	if err != nil {
+		return nil, err
+	}
+	r2, err := ds.getRoute(r1.GetTimeWindow().GetEndedAt().AsTime(), request, dstTW, srcLoc, dstLoc, newItemWithRequest(request), true)
+	if err != nil {
+		return nil, err
+	}
+	return []*simulation.Route{r1, r2}, nil
+}
+
+func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryRequest, restrictedTimeWindow *delivery.TimeWindow, srcLoc, dstLoc *delivery.LatLng, item *binpack.Item, isRequestDst bool) (*simulation.Route, error) {
+	tw1, speed1, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, ds.maxSpeedKmPerHour)
+	if err != nil {
+		return nil, err
+	}
+	if item != nil {
+		err = ds.packer.AddItem(item)
+		if err != nil {
+			return nil, err
+		}
+	}
+	r1 := &simulation.Route{
+		DeliveryRequestUuid: request.GetUuid(),
+		SrcLoc:              srcLoc,
+		DstLoc:              dstLoc,
+		TimeWindow:          tw1,
+		VehicleState: &delivery.VehicleState{
+			VehicleCapacity: ds.vehicleCapacity,
+			BoxItems:        binpack.BoxItemsToAPIBoxItems(ds.packer.BoxItems()),
+		},
+		SpeedKmPerHour: speed1,
+		IsReqDst:       isRequestDst,
+	}
+	return r1, nil
+}
+
+func calculateRequiredTimeWindowAndSpeedKmPerHour(curTime time.Time, restrictedTimeWindow *delivery.TimeWindow, curLoc *delivery.LatLng, dstLoc *delivery.LatLng, maxSpeedKmPerHour float64) (*delivery.TimeWindow, float64, error) {
+	distKm := h3.PointDistKm(
+		h3.GeoCoord{Latitude: curLoc.GetLat(), Longitude: curLoc.GetLng()},
+		h3.GeoCoord{Latitude: dstLoc.GetLat(), Longitude: dstLoc.GetLng()})
+	curLocToDstLocRequiredDuration, err := distance.CalculateTravelingTime(distKm, maxSpeedKmPerHour)
+	if err != nil {
+		return nil, 0, err
+	}
+	if curTime.Add(curLocToDstLocRequiredDuration).After(restrictedTimeWindow.GetEndedAt().AsTime()) {
 		return nil, 0, errExceedTimeWindow
 	}
-	if curTime.Add(curLocToSrcLocRequiredDuration).Before(restrictedTimewindow.GetStartedAt().AsTime()) {
-		requiredSpeed := distance.CalculateRequiredSpeedKmPerHour(curLoc.GetLat(), curLoc.GetLng(), dstLoc.GetLat(), dstLoc.GetLng(), restrictedTimewindow.GetStartedAt().AsTime().Sub(curTime))
+	if curTime.Add(curLocToDstLocRequiredDuration).Before(restrictedTimeWindow.GetStartedAt().AsTime()) {
+		requiredSpeed := distance.CalculateRequiredSpeedKmPerHour(distKm, restrictedTimeWindow.GetStartedAt().AsTime().Sub(curTime))
 		return &delivery.TimeWindow{
 			StartedAt: &timestamppb.Timestamp{Seconds: curTime.UTC().Unix()},
-			EndedAt:   &timestamppb.Timestamp{Seconds: restrictedTimewindow.GetStartedAt().AsTime().UTC().Unix()},
+			EndedAt:   &timestamppb.Timestamp{Seconds: restrictedTimeWindow.GetStartedAt().AsTime().UTC().Unix()},
 		}, requiredSpeed, nil
 	}
 	return &delivery.TimeWindow{
 		StartedAt: &timestamppb.Timestamp{Seconds: curTime.UTC().Unix()},
-		EndedAt:   &timestamppb.Timestamp{Seconds: curTime.Add(curLocToSrcLocRequiredDuration).UTC().Unix()},
+		EndedAt:   &timestamppb.Timestamp{Seconds: curTime.Add(curLocToDstLocRequiredDuration).UTC().Unix()},
 	}, maxSpeedKmPerHour, nil
+}
+
+func newItemWithRequest(request *simulation.DeliveryRequest) *binpack.Item {
+	return binpack.NewItemWithUUID(
+		request.GetUuid(),
+		int(request.GetGoodsMetadata().GetWeight()),
+		int(request.GetGoodsMetadata().GetWidth()),
+		int(request.GetGoodsMetadata().GetLength()),
+		int(request.GetGoodsMetadata().GetHeight()))
 }
