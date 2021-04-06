@@ -1,8 +1,9 @@
 package static
 
 const (
-	PostgresHost     = "POSTGRES_HOST"
-	PostgresUser     = "POSTGRES_USER"
+	PostgresHost = "POSTGRES_HOST"
+	PostgresUser = "POSTGRES_USER"
+	// nolint: gosec
 	PostgresPassword = "POSTGRES_PASSWORD"
 	PostgresPort     = "POSTGRES_PORT"
 	PostgresDB       = "POSTGRES_DB"
