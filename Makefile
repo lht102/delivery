@@ -94,11 +94,10 @@ proto:
 		api/errmsg/*.proto \
 		api/delivery/*.proto \
 		api/delivery/simulation/*.proto
-	
-	@rm -rf build/api/js
-	@mkdir -p build/api/js
-	pbjs -t static-module -w es6 --es6 -o build/api/js/compiled.js \
-		api/errmsg/*.proto \
-		api/delivery/*.proto \
-		api/delivery/simulation/*.proto
-	pbts -o build/api/js/compiled.d.ts build/api/js/compiled.js
+# @rm -rf build/api/js
+# @mkdir -p build/api/js
+# pbjs -t static-module -w es6 --es6 -o build/api/js/compiled.js \
+# 	api/errmsg/*.proto \
+# 	api/delivery/*.proto \
+# 	api/delivery/simulation/*.proto
+# pbts -o build/api/js/compiled.d.ts build/api/js/compiled.js
