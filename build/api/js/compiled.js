@@ -1848,6 +1848,7 @@ export const delivery = $root.delivery = (() => {
              * @property {Array.<delivery.simulation.IDeliveryRequest>|null} [deliveryRequests] SimulationRequest deliveryRequests
              * @property {Array.<delivery.simulation.IDriverRequest>|null} [driverRequests] SimulationRequest driverRequests
              * @property {google.protobuf.ITimestamp|null} [createdAt] SimulationRequest createdAt
+             * @property {boolean|null} [supportRetracement] SimulationRequest supportRetracement
              */
 
             /**
@@ -1892,6 +1893,14 @@ export const delivery = $root.delivery = (() => {
             SimulationRequest.prototype.createdAt = null;
 
             /**
+             * SimulationRequest supportRetracement.
+             * @member {boolean} supportRetracement
+             * @memberof delivery.simulation.SimulationRequest
+             * @instance
+             */
+            SimulationRequest.prototype.supportRetracement = false;
+
+            /**
              * Creates a new SimulationRequest instance using the specified properties.
              * @function create
              * @memberof delivery.simulation.SimulationRequest
@@ -1923,6 +1932,8 @@ export const delivery = $root.delivery = (() => {
                         $root.delivery.simulation.DriverRequest.encode(message.driverRequests[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                 if (message.createdAt != null && Object.hasOwnProperty.call(message, "createdAt"))
                     $root.google.protobuf.Timestamp.encode(message.createdAt, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.supportRetracement != null && Object.hasOwnProperty.call(message, "supportRetracement"))
+                    writer.uint32(/* id 4, wireType 0 =*/32).bool(message.supportRetracement);
                 return writer;
             };
 
@@ -1969,6 +1980,9 @@ export const delivery = $root.delivery = (() => {
                         break;
                     case 3:
                         message.createdAt = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                        break;
+                    case 4:
+                        message.supportRetracement = reader.bool();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2028,6 +2042,9 @@ export const delivery = $root.delivery = (() => {
                     if (error)
                         return "createdAt." + error;
                 }
+                if (message.supportRetracement != null && message.hasOwnProperty("supportRetracement"))
+                    if (typeof message.supportRetracement !== "boolean")
+                        return "supportRetracement: boolean expected";
                 return null;
             };
 
@@ -2068,6 +2085,8 @@ export const delivery = $root.delivery = (() => {
                         throw TypeError(".delivery.simulation.SimulationRequest.createdAt: object expected");
                     message.createdAt = $root.google.protobuf.Timestamp.fromObject(object.createdAt);
                 }
+                if (object.supportRetracement != null)
+                    message.supportRetracement = Boolean(object.supportRetracement);
                 return message;
             };
 
@@ -2088,8 +2107,10 @@ export const delivery = $root.delivery = (() => {
                     object.deliveryRequests = [];
                     object.driverRequests = [];
                 }
-                if (options.defaults)
+                if (options.defaults) {
                     object.createdAt = null;
+                    object.supportRetracement = false;
+                }
                 if (message.deliveryRequests && message.deliveryRequests.length) {
                     object.deliveryRequests = [];
                     for (let j = 0; j < message.deliveryRequests.length; ++j)
@@ -2102,6 +2123,8 @@ export const delivery = $root.delivery = (() => {
                 }
                 if (message.createdAt != null && message.hasOwnProperty("createdAt"))
                     object.createdAt = $root.google.protobuf.Timestamp.toObject(message.createdAt, options);
+                if (message.supportRetracement != null && message.hasOwnProperty("supportRetracement"))
+                    object.supportRetracement = message.supportRetracement;
                 return object;
             };
 
@@ -2117,6 +2140,489 @@ export const delivery = $root.delivery = (() => {
             };
 
             return SimulationRequest;
+        })();
+
+        simulation.SimulationResponse = (function() {
+
+            /**
+             * Properties of a SimulationResponse.
+             * @memberof delivery.simulation
+             * @interface ISimulationResponse
+             * @property {Object.<string,delivery.simulation.IDriverRoutingDetails>|null} [driverRoutingDetailsByUuid] SimulationResponse driverRoutingDetailsByUuid
+             * @property {number|null} [runningTime] SimulationResponse runningTime
+             */
+
+            /**
+             * Constructs a new SimulationResponse.
+             * @memberof delivery.simulation
+             * @classdesc Represents a SimulationResponse.
+             * @implements ISimulationResponse
+             * @constructor
+             * @param {delivery.simulation.ISimulationResponse=} [properties] Properties to set
+             */
+            function SimulationResponse(properties) {
+                this.driverRoutingDetailsByUuid = {};
+                if (properties)
+                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * SimulationResponse driverRoutingDetailsByUuid.
+             * @member {Object.<string,delivery.simulation.IDriverRoutingDetails>} driverRoutingDetailsByUuid
+             * @memberof delivery.simulation.SimulationResponse
+             * @instance
+             */
+            SimulationResponse.prototype.driverRoutingDetailsByUuid = $util.emptyObject;
+
+            /**
+             * SimulationResponse runningTime.
+             * @member {number} runningTime
+             * @memberof delivery.simulation.SimulationResponse
+             * @instance
+             */
+            SimulationResponse.prototype.runningTime = 0;
+
+            /**
+             * Creates a new SimulationResponse instance using the specified properties.
+             * @function create
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {delivery.simulation.ISimulationResponse=} [properties] Properties to set
+             * @returns {delivery.simulation.SimulationResponse} SimulationResponse instance
+             */
+            SimulationResponse.create = function create(properties) {
+                return new SimulationResponse(properties);
+            };
+
+            /**
+             * Encodes the specified SimulationResponse message. Does not implicitly {@link delivery.simulation.SimulationResponse.verify|verify} messages.
+             * @function encode
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {delivery.simulation.ISimulationResponse} message SimulationResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SimulationResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.driverRoutingDetailsByUuid != null && Object.hasOwnProperty.call(message, "driverRoutingDetailsByUuid"))
+                    for (let keys = Object.keys(message.driverRoutingDetailsByUuid), i = 0; i < keys.length; ++i) {
+                        writer.uint32(/* id 1, wireType 2 =*/10).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                        $root.delivery.simulation.DriverRoutingDetails.encode(message.driverRoutingDetailsByUuid[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    }
+                if (message.runningTime != null && Object.hasOwnProperty.call(message, "runningTime"))
+                    writer.uint32(/* id 2, wireType 1 =*/17).double(message.runningTime);
+                return writer;
+            };
+
+            /**
+             * Encodes the specified SimulationResponse message, length delimited. Does not implicitly {@link delivery.simulation.SimulationResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {delivery.simulation.ISimulationResponse} message SimulationResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SimulationResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a SimulationResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {delivery.simulation.SimulationResponse} SimulationResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SimulationResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.delivery.simulation.SimulationResponse(), key, value;
+                while (reader.pos < end) {
+                    let tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (message.driverRoutingDetailsByUuid === $util.emptyObject)
+                            message.driverRoutingDetailsByUuid = {};
+                        let end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            let tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.delivery.simulation.DriverRoutingDetails.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.driverRoutingDetailsByUuid[key] = value;
+                        break;
+                    case 2:
+                        message.runningTime = reader.double();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a SimulationResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {delivery.simulation.SimulationResponse} SimulationResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SimulationResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a SimulationResponse message.
+             * @function verify
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            SimulationResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.driverRoutingDetailsByUuid != null && message.hasOwnProperty("driverRoutingDetailsByUuid")) {
+                    if (!$util.isObject(message.driverRoutingDetailsByUuid))
+                        return "driverRoutingDetailsByUuid: object expected";
+                    let key = Object.keys(message.driverRoutingDetailsByUuid);
+                    for (let i = 0; i < key.length; ++i) {
+                        let error = $root.delivery.simulation.DriverRoutingDetails.verify(message.driverRoutingDetailsByUuid[key[i]]);
+                        if (error)
+                            return "driverRoutingDetailsByUuid." + error;
+                    }
+                }
+                if (message.runningTime != null && message.hasOwnProperty("runningTime"))
+                    if (typeof message.runningTime !== "number")
+                        return "runningTime: number expected";
+                return null;
+            };
+
+            /**
+             * Creates a SimulationResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {delivery.simulation.SimulationResponse} SimulationResponse
+             */
+            SimulationResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.delivery.simulation.SimulationResponse)
+                    return object;
+                let message = new $root.delivery.simulation.SimulationResponse();
+                if (object.driverRoutingDetailsByUuid) {
+                    if (typeof object.driverRoutingDetailsByUuid !== "object")
+                        throw TypeError(".delivery.simulation.SimulationResponse.driverRoutingDetailsByUuid: object expected");
+                    message.driverRoutingDetailsByUuid = {};
+                    for (let keys = Object.keys(object.driverRoutingDetailsByUuid), i = 0; i < keys.length; ++i) {
+                        if (typeof object.driverRoutingDetailsByUuid[keys[i]] !== "object")
+                            throw TypeError(".delivery.simulation.SimulationResponse.driverRoutingDetailsByUuid: object expected");
+                        message.driverRoutingDetailsByUuid[keys[i]] = $root.delivery.simulation.DriverRoutingDetails.fromObject(object.driverRoutingDetailsByUuid[keys[i]]);
+                    }
+                }
+                if (object.runningTime != null)
+                    message.runningTime = Number(object.runningTime);
+                return message;
+            };
+
+            /**
+             * Creates a plain object from a SimulationResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof delivery.simulation.SimulationResponse
+             * @static
+             * @param {delivery.simulation.SimulationResponse} message SimulationResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            SimulationResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                let object = {};
+                if (options.objects || options.defaults)
+                    object.driverRoutingDetailsByUuid = {};
+                if (options.defaults)
+                    object.runningTime = 0;
+                let keys2;
+                if (message.driverRoutingDetailsByUuid && (keys2 = Object.keys(message.driverRoutingDetailsByUuid)).length) {
+                    object.driverRoutingDetailsByUuid = {};
+                    for (let j = 0; j < keys2.length; ++j)
+                        object.driverRoutingDetailsByUuid[keys2[j]] = $root.delivery.simulation.DriverRoutingDetails.toObject(message.driverRoutingDetailsByUuid[keys2[j]], options);
+                }
+                if (message.runningTime != null && message.hasOwnProperty("runningTime"))
+                    object.runningTime = options.json && !isFinite(message.runningTime) ? String(message.runningTime) : message.runningTime;
+                return object;
+            };
+
+            /**
+             * Converts this SimulationResponse to JSON.
+             * @function toJSON
+             * @memberof delivery.simulation.SimulationResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            SimulationResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return SimulationResponse;
+        })();
+
+        simulation.DriverRoutingDetails = (function() {
+
+            /**
+             * Properties of a DriverRoutingDetails.
+             * @memberof delivery.simulation
+             * @interface IDriverRoutingDetails
+             * @property {string|null} [name] DriverRoutingDetails name
+             * @property {Array.<delivery.simulation.IRoute>|null} [routes] DriverRoutingDetails routes
+             */
+
+            /**
+             * Constructs a new DriverRoutingDetails.
+             * @memberof delivery.simulation
+             * @classdesc Represents a DriverRoutingDetails.
+             * @implements IDriverRoutingDetails
+             * @constructor
+             * @param {delivery.simulation.IDriverRoutingDetails=} [properties] Properties to set
+             */
+            function DriverRoutingDetails(properties) {
+                this.routes = [];
+                if (properties)
+                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * DriverRoutingDetails name.
+             * @member {string} name
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @instance
+             */
+            DriverRoutingDetails.prototype.name = "";
+
+            /**
+             * DriverRoutingDetails routes.
+             * @member {Array.<delivery.simulation.IRoute>} routes
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @instance
+             */
+            DriverRoutingDetails.prototype.routes = $util.emptyArray;
+
+            /**
+             * Creates a new DriverRoutingDetails instance using the specified properties.
+             * @function create
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {delivery.simulation.IDriverRoutingDetails=} [properties] Properties to set
+             * @returns {delivery.simulation.DriverRoutingDetails} DriverRoutingDetails instance
+             */
+            DriverRoutingDetails.create = function create(properties) {
+                return new DriverRoutingDetails(properties);
+            };
+
+            /**
+             * Encodes the specified DriverRoutingDetails message. Does not implicitly {@link delivery.simulation.DriverRoutingDetails.verify|verify} messages.
+             * @function encode
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {delivery.simulation.IDriverRoutingDetails} message DriverRoutingDetails message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DriverRoutingDetails.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+                if (message.routes != null && message.routes.length)
+                    for (let i = 0; i < message.routes.length; ++i)
+                        $root.delivery.simulation.Route.encode(message.routes[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                return writer;
+            };
+
+            /**
+             * Encodes the specified DriverRoutingDetails message, length delimited. Does not implicitly {@link delivery.simulation.DriverRoutingDetails.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {delivery.simulation.IDriverRoutingDetails} message DriverRoutingDetails message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DriverRoutingDetails.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a DriverRoutingDetails message from the specified reader or buffer.
+             * @function decode
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {delivery.simulation.DriverRoutingDetails} DriverRoutingDetails
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DriverRoutingDetails.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.delivery.simulation.DriverRoutingDetails();
+                while (reader.pos < end) {
+                    let tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.name = reader.string();
+                        break;
+                    case 2:
+                        if (!(message.routes && message.routes.length))
+                            message.routes = [];
+                        message.routes.push($root.delivery.simulation.Route.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a DriverRoutingDetails message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {delivery.simulation.DriverRoutingDetails} DriverRoutingDetails
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DriverRoutingDetails.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a DriverRoutingDetails message.
+             * @function verify
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DriverRoutingDetails.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.name != null && message.hasOwnProperty("name"))
+                    if (!$util.isString(message.name))
+                        return "name: string expected";
+                if (message.routes != null && message.hasOwnProperty("routes")) {
+                    if (!Array.isArray(message.routes))
+                        return "routes: array expected";
+                    for (let i = 0; i < message.routes.length; ++i) {
+                        let error = $root.delivery.simulation.Route.verify(message.routes[i]);
+                        if (error)
+                            return "routes." + error;
+                    }
+                }
+                return null;
+            };
+
+            /**
+             * Creates a DriverRoutingDetails message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {delivery.simulation.DriverRoutingDetails} DriverRoutingDetails
+             */
+            DriverRoutingDetails.fromObject = function fromObject(object) {
+                if (object instanceof $root.delivery.simulation.DriverRoutingDetails)
+                    return object;
+                let message = new $root.delivery.simulation.DriverRoutingDetails();
+                if (object.name != null)
+                    message.name = String(object.name);
+                if (object.routes) {
+                    if (!Array.isArray(object.routes))
+                        throw TypeError(".delivery.simulation.DriverRoutingDetails.routes: array expected");
+                    message.routes = [];
+                    for (let i = 0; i < object.routes.length; ++i) {
+                        if (typeof object.routes[i] !== "object")
+                            throw TypeError(".delivery.simulation.DriverRoutingDetails.routes: object expected");
+                        message.routes[i] = $root.delivery.simulation.Route.fromObject(object.routes[i]);
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Creates a plain object from a DriverRoutingDetails message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @static
+             * @param {delivery.simulation.DriverRoutingDetails} message DriverRoutingDetails
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DriverRoutingDetails.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                let object = {};
+                if (options.arrays || options.defaults)
+                    object.routes = [];
+                if (options.defaults)
+                    object.name = "";
+                if (message.name != null && message.hasOwnProperty("name"))
+                    object.name = message.name;
+                if (message.routes && message.routes.length) {
+                    object.routes = [];
+                    for (let j = 0; j < message.routes.length; ++j)
+                        object.routes[j] = $root.delivery.simulation.Route.toObject(message.routes[j], options);
+                }
+                return object;
+            };
+
+            /**
+             * Converts this DriverRoutingDetails to JSON.
+             * @function toJSON
+             * @memberof delivery.simulation.DriverRoutingDetails
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DriverRoutingDetails.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return DriverRoutingDetails;
         })();
 
         simulation.DriverRequest = (function() {
@@ -2816,6 +3322,8 @@ export const delivery = $root.delivery = (() => {
              * @property {delivery.ITimeWindow|null} [timeWindow] Route timeWindow
              * @property {delivery.IVehicleState|null} [vehicleState] Route vehicleState
              * @property {number|null} [speedKmPerHour] Route speedKmPerHour
+             * @property {boolean|null} [isReqSrc] Route isReqSrc
+             * @property {boolean|null} [isReqDst] Route isReqDst
              */
 
             /**
@@ -2882,6 +3390,22 @@ export const delivery = $root.delivery = (() => {
             Route.prototype.speedKmPerHour = 0;
 
             /**
+             * Route isReqSrc.
+             * @member {boolean} isReqSrc
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.isReqSrc = false;
+
+            /**
+             * Route isReqDst.
+             * @member {boolean} isReqDst
+             * @memberof delivery.simulation.Route
+             * @instance
+             */
+            Route.prototype.isReqDst = false;
+
+            /**
              * Creates a new Route instance using the specified properties.
              * @function create
              * @memberof delivery.simulation.Route
@@ -2917,6 +3441,10 @@ export const delivery = $root.delivery = (() => {
                     $root.delivery.VehicleState.encode(message.vehicleState, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 if (message.speedKmPerHour != null && Object.hasOwnProperty.call(message, "speedKmPerHour"))
                     writer.uint32(/* id 6, wireType 1 =*/49).double(message.speedKmPerHour);
+                if (message.isReqSrc != null && Object.hasOwnProperty.call(message, "isReqSrc"))
+                    writer.uint32(/* id 7, wireType 0 =*/56).bool(message.isReqSrc);
+                if (message.isReqDst != null && Object.hasOwnProperty.call(message, "isReqDst"))
+                    writer.uint32(/* id 8, wireType 0 =*/64).bool(message.isReqDst);
                 return writer;
             };
 
@@ -2968,6 +3496,12 @@ export const delivery = $root.delivery = (() => {
                         break;
                     case 6:
                         message.speedKmPerHour = reader.double();
+                        break;
+                    case 7:
+                        message.isReqSrc = reader.bool();
+                        break;
+                    case 8:
+                        message.isReqDst = reader.bool();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -3030,6 +3564,12 @@ export const delivery = $root.delivery = (() => {
                 if (message.speedKmPerHour != null && message.hasOwnProperty("speedKmPerHour"))
                     if (typeof message.speedKmPerHour !== "number")
                         return "speedKmPerHour: number expected";
+                if (message.isReqSrc != null && message.hasOwnProperty("isReqSrc"))
+                    if (typeof message.isReqSrc !== "boolean")
+                        return "isReqSrc: boolean expected";
+                if (message.isReqDst != null && message.hasOwnProperty("isReqDst"))
+                    if (typeof message.isReqDst !== "boolean")
+                        return "isReqDst: boolean expected";
                 return null;
             };
 
@@ -3069,6 +3609,10 @@ export const delivery = $root.delivery = (() => {
                 }
                 if (object.speedKmPerHour != null)
                     message.speedKmPerHour = Number(object.speedKmPerHour);
+                if (object.isReqSrc != null)
+                    message.isReqSrc = Boolean(object.isReqSrc);
+                if (object.isReqDst != null)
+                    message.isReqDst = Boolean(object.isReqDst);
                 return message;
             };
 
@@ -3092,6 +3636,8 @@ export const delivery = $root.delivery = (() => {
                     object.timeWindow = null;
                     object.vehicleState = null;
                     object.speedKmPerHour = 0;
+                    object.isReqSrc = false;
+                    object.isReqDst = false;
                 }
                 if (message.deliveryRequestUuid != null && message.hasOwnProperty("deliveryRequestUuid"))
                     object.deliveryRequestUuid = message.deliveryRequestUuid;
@@ -3105,6 +3651,10 @@ export const delivery = $root.delivery = (() => {
                     object.vehicleState = $root.delivery.VehicleState.toObject(message.vehicleState, options);
                 if (message.speedKmPerHour != null && message.hasOwnProperty("speedKmPerHour"))
                     object.speedKmPerHour = options.json && !isFinite(message.speedKmPerHour) ? String(message.speedKmPerHour) : message.speedKmPerHour;
+                if (message.isReqSrc != null && message.hasOwnProperty("isReqSrc"))
+                    object.isReqSrc = message.isReqSrc;
+                if (message.isReqDst != null && message.hasOwnProperty("isReqDst"))
+                    object.isReqDst = message.isReqDst;
                 return object;
             };
 

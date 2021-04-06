@@ -764,6 +764,9 @@ export namespace delivery {
 
             /** SimulationRequest createdAt */
             createdAt?: (google.protobuf.ITimestamp|null);
+
+            /** SimulationRequest supportRetracement */
+            supportRetracement?: (boolean|null);
         }
 
         /** Represents a SimulationRequest. */
@@ -783,6 +786,9 @@ export namespace delivery {
 
             /** SimulationRequest createdAt. */
             public createdAt?: (google.protobuf.ITimestamp|null);
+
+            /** SimulationRequest supportRetracement. */
+            public supportRetracement: boolean;
 
             /**
              * Creates a new SimulationRequest instance using the specified properties.
@@ -850,6 +856,198 @@ export namespace delivery {
 
             /**
              * Converts this SimulationRequest to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a SimulationResponse. */
+        interface ISimulationResponse {
+
+            /** SimulationResponse driverRoutingDetailsByUuid */
+            driverRoutingDetailsByUuid?: ({ [k: string]: delivery.simulation.IDriverRoutingDetails }|null);
+
+            /** SimulationResponse runningTime */
+            runningTime?: (number|null);
+        }
+
+        /** Represents a SimulationResponse. */
+        class SimulationResponse implements ISimulationResponse {
+
+            /**
+             * Constructs a new SimulationResponse.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: delivery.simulation.ISimulationResponse);
+
+            /** SimulationResponse driverRoutingDetailsByUuid. */
+            public driverRoutingDetailsByUuid: { [k: string]: delivery.simulation.IDriverRoutingDetails };
+
+            /** SimulationResponse runningTime. */
+            public runningTime: number;
+
+            /**
+             * Creates a new SimulationResponse instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns SimulationResponse instance
+             */
+            public static create(properties?: delivery.simulation.ISimulationResponse): delivery.simulation.SimulationResponse;
+
+            /**
+             * Encodes the specified SimulationResponse message. Does not implicitly {@link delivery.simulation.SimulationResponse.verify|verify} messages.
+             * @param message SimulationResponse message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: delivery.simulation.ISimulationResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified SimulationResponse message, length delimited. Does not implicitly {@link delivery.simulation.SimulationResponse.verify|verify} messages.
+             * @param message SimulationResponse message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: delivery.simulation.ISimulationResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a SimulationResponse message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns SimulationResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): delivery.simulation.SimulationResponse;
+
+            /**
+             * Decodes a SimulationResponse message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns SimulationResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): delivery.simulation.SimulationResponse;
+
+            /**
+             * Verifies a SimulationResponse message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a SimulationResponse message from a plain object. Also converts values to their respective internal types.
+             * @param object Plain object
+             * @returns SimulationResponse
+             */
+            public static fromObject(object: { [k: string]: any }): delivery.simulation.SimulationResponse;
+
+            /**
+             * Creates a plain object from a SimulationResponse message. Also converts values to other types if specified.
+             * @param message SimulationResponse
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: delivery.simulation.SimulationResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this SimulationResponse to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a DriverRoutingDetails. */
+        interface IDriverRoutingDetails {
+
+            /** DriverRoutingDetails name */
+            name?: (string|null);
+
+            /** DriverRoutingDetails routes */
+            routes?: (delivery.simulation.IRoute[]|null);
+        }
+
+        /** Represents a DriverRoutingDetails. */
+        class DriverRoutingDetails implements IDriverRoutingDetails {
+
+            /**
+             * Constructs a new DriverRoutingDetails.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: delivery.simulation.IDriverRoutingDetails);
+
+            /** DriverRoutingDetails name. */
+            public name: string;
+
+            /** DriverRoutingDetails routes. */
+            public routes: delivery.simulation.IRoute[];
+
+            /**
+             * Creates a new DriverRoutingDetails instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns DriverRoutingDetails instance
+             */
+            public static create(properties?: delivery.simulation.IDriverRoutingDetails): delivery.simulation.DriverRoutingDetails;
+
+            /**
+             * Encodes the specified DriverRoutingDetails message. Does not implicitly {@link delivery.simulation.DriverRoutingDetails.verify|verify} messages.
+             * @param message DriverRoutingDetails message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: delivery.simulation.IDriverRoutingDetails, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified DriverRoutingDetails message, length delimited. Does not implicitly {@link delivery.simulation.DriverRoutingDetails.verify|verify} messages.
+             * @param message DriverRoutingDetails message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: delivery.simulation.IDriverRoutingDetails, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a DriverRoutingDetails message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns DriverRoutingDetails
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): delivery.simulation.DriverRoutingDetails;
+
+            /**
+             * Decodes a DriverRoutingDetails message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns DriverRoutingDetails
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): delivery.simulation.DriverRoutingDetails;
+
+            /**
+             * Verifies a DriverRoutingDetails message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a DriverRoutingDetails message from a plain object. Also converts values to their respective internal types.
+             * @param object Plain object
+             * @returns DriverRoutingDetails
+             */
+            public static fromObject(object: { [k: string]: any }): delivery.simulation.DriverRoutingDetails;
+
+            /**
+             * Creates a plain object from a DriverRoutingDetails message. Also converts values to other types if specified.
+             * @param message DriverRoutingDetails
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: delivery.simulation.DriverRoutingDetails, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this DriverRoutingDetails to JSON.
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
@@ -1127,6 +1325,12 @@ export namespace delivery {
 
             /** Route speedKmPerHour */
             speedKmPerHour?: (number|null);
+
+            /** Route isReqSrc */
+            isReqSrc?: (boolean|null);
+
+            /** Route isReqDst */
+            isReqDst?: (boolean|null);
         }
 
         /** Represents a Route. */
@@ -1155,6 +1359,12 @@ export namespace delivery {
 
             /** Route speedKmPerHour. */
             public speedKmPerHour: number;
+
+            /** Route isReqSrc. */
+            public isReqSrc: boolean;
+
+            /** Route isReqDst. */
+            public isReqDst: boolean;
 
             /**
              * Creates a new Route instance using the specified properties.
