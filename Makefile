@@ -17,7 +17,11 @@ dep:
 
 .PHONY: static-check
 static-check:
-	staticcheck ${LOCAL_PACKAGES} 
+	staticcheck ${LOCAL_PACKAGES}
+
+.PHONY: lint
+lint:
+	golangci-lint run
 
 .PHONY: test-all-packages
 test-all-packages:
@@ -28,7 +32,7 @@ test-coverage:
 	gocov convert c.out | gocov report
 
 .PHONY: test
-test: static-check test-all-packages test-coverage
+test: static-check lint test-all-packages test-coverage
 
 .PHONY: build
 build:
