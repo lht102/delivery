@@ -16,24 +16,24 @@ func Decode(w http.ResponseWriter, r *http.Request, m proto.Message) error {
 		return err
 	}
 	return protojson.UnmarshalOptions{
-		AllowPartial: true,
+		AllowPartial:   true,
+		DiscardUnknown: true,
 	}.Unmarshal(payload, m)
 }
 
-func Response(w http.ResponseWriter, r *http.Request, data proto.Message, status int) {
+func Response(w http.ResponseWriter, data proto.Message, status int) {
 	w.Header().Set(static.ContentTypeKey, static.ContentTypeValueJSON)
 	resp, err := protojson.MarshalOptions{
 		EmitUnpopulated: true,
 	}.Marshal(data)
 	if err != nil {
-		ResponseErr(w, r, err.Error(), http.StatusInternalServerError)
+		ResponseErr(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(status)
-	w.Write(resp)
+	writeBody(w, resp, status)
 }
 
-func ResponseErr(w http.ResponseWriter, r *http.Request, msg string, status int) {
+func ResponseErr(w http.ResponseWriter, msg string, status int) {
 	w.Header().Set(static.ContentTypeKey, static.ContentTypeValueJSON)
 	errResp, err := protojson.Marshal(&errmsg.Error{
 		StatusText: http.StatusText(status),
@@ -43,6 +43,13 @@ func ResponseErr(w http.ResponseWriter, r *http.Request, msg string, status int)
 		http.Error(w, err.Error(), status)
 		return
 	}
+	writeBody(w, errResp, status)
+}
+
+func writeBody(w http.ResponseWriter, b []byte, status int) {
 	w.WriteHeader(status)
-	w.Write(errResp)
+	_, err := w.Write(b)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
