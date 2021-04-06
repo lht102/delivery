@@ -1,0 +1,37 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:12.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: delivery_test
+    networks:
+      - integration-tests
+
+  test-integration:
+    build:
+      context: .
+      target: test-env
+    command:
+      - /bin/sh
+      - -c
+      - |
+        chmod +x ./script/wait.sh
+        ./script/wait.sh db 5432
+        make test
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: delivery_test
+      POSTGRES_SSL_MODE: disable
+    networks:
+      - integration-tests
+    depends_on:
+      - db
+
+networks:
+  integration-tests:
+    driver: bridge
