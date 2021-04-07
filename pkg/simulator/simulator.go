@@ -53,33 +53,37 @@ func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Log
 func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResponse {
 	sortedDeliveryRequests := getSortedDeliveryRequests(s.simulationRequest)
 	timelineList := getSimulationTimelineList(s.simulationRequest)
+	var sortedDeliveryRequestsToBeHandledQueue []*simulation.DeliveryRequest
+	sortedDeliveryRequestsToBeHandledQueue = append(sortedDeliveryRequestsToBeHandledQueue, sortedDeliveryRequests...)
 	var remainingSortedDeliveryRequestsToBeHandled []*simulation.DeliveryRequest
-	remainingSortedDeliveryRequestsToBeHandled = append(remainingSortedDeliveryRequestsToBeHandled, sortedDeliveryRequests...)
 	for _, ts := range timelineList {
 		s.updateAllDriversWithServingDriverState(ts)
 
+		for len(sortedDeliveryRequestsToBeHandledQueue) > 0 && !sortedDeliveryRequestsToBeHandledQueue[0].GetCreatedAt().AsTime().After(ts) {
+			remainingSortedDeliveryRequestsToBeHandled = append(remainingSortedDeliveryRequestsToBeHandled, sortedDeliveryRequestsToBeHandledQueue[0])
+			sortedDeliveryRequestsToBeHandledQueue = sortedDeliveryRequestsToBeHandledQueue[1:]
+		}
 		var remainingSortedDeliveryRequestsToBeHandledTmp []*simulation.DeliveryRequest
-		for i, req := range remainingSortedDeliveryRequestsToBeHandled {
-			if req.GetCreatedAt().AsTime().After(ts) {
-				for j := i; j < len(remainingSortedDeliveryRequestsToBeHandled); j++ {
-					remainingSortedDeliveryRequestsToBeHandledTmp = append(remainingSortedDeliveryRequestsToBeHandledTmp, req)
-				}
-				break
-			}
+		for _, req := range remainingSortedDeliveryRequestsToBeHandled {
 
-			srcLoc := req.GetSrcLoc()
-			srcGeoIndex := h3.FromGeo(h3.GeoCoord{Latitude: srcLoc.GetLat(), Longitude: srcLoc.GetLng()}, h3Resolution)
-			srcRingGeoIndices := h3.KRing(srcGeoIndex, 1)
-			var driversNearbySrcLoc []*DriverState
-			for _, geoIndex := range srcRingGeoIndices {
-				driverUUID, ok := s.driverUUIDByGeoIndex[geoIndex]
-				if ok {
-					driversNearbySrcLoc = append(driversNearbySrcLoc, s.driverStateByUUID[driverUUID])
-				}
+			// TODO: implement different way to select drivers
+			// srcLoc := req.GetSrcLoc()
+			// srcGeoIndex := h3.FromGeo(h3.GeoCoord{Latitude: srcLoc.GetLat(), Longitude: srcLoc.GetLng()}, h3Resolution)
+			// srcRingGeoIndices := h3.KRing(srcGeoIndex, 1)
+			// var driversNearbySrcLoc []*DriverState
+			// for _, geoIndex := range srcRingGeoIndices {
+			// 	driverUUID, ok := s.driverUUIDByGeoIndex[geoIndex]
+			// 	if ok {
+			// 		driversNearbySrcLoc = append(driversNearbySrcLoc, s.driverStateByUUID[driverUUID])
+			// 	}
+			// }
+			// sort.Slice(driversNearbySrcLoc, func(i, j int) bool {
+			// 	return driversNearbySrcLoc[i].NumOfServingRequests() < driversNearbySrcLoc[j].NumOfServingRequests()
+			// })
+			driversNearbySrcLoc := []*DriverState{}
+			for _, ds := range s.driverStateByUUID {
+				driversNearbySrcLoc = append(driversNearbySrcLoc, ds)
 			}
-			sort.Slice(driversNearbySrcLoc, func(i, j int) bool {
-				return driversNearbySrcLoc[i].NumOfServingRequests() < driversNearbySrcLoc[j].NumOfServingRequests()
-			})
 
 			isCurrentReqHandled := s.handleCurrentDeliveryRequestWithSuitableDrivers(driversNearbySrcLoc, ts, req)
 			if !isCurrentReqHandled {
@@ -212,6 +216,7 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 	}
 	ds.status = delivery.DriverStatus_DRIVER_STATUS_SERVING
 	ds.servingRequestsByUUID[request.GetUuid()] = request
+	s.servingDriverUUIDSet[ds.uuid] = true
 	return nil
 }
 
@@ -243,11 +248,7 @@ func getSimulationTimelineList(req *simulation.SimulationRequest) []time.Time {
 	}
 	for _, req := range req.GetDeliveryRequests() {
 		createdAt := req.GetCreatedAt()
-		srcTD := req.GetSrcTimeWindow()
-		dstTD := req.GetDstTimeWindow()
 		timelineSet[createdAt.AsTime().Unix()] = true
-		timelineSet[srcTD.GetStartedAt().AsTime().Unix()] = true
-		timelineSet[dstTD.GetStartedAt().AsTime().Unix()] = true
 
 	}
 	timelineList := make([]time.Time, len(timelineSet))
