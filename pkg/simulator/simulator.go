@@ -55,14 +55,13 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 	timelineList := getSimulationTimelineList(s.simulationRequest)
 	var sortedDeliveryRequestsToBeHandledQueue []*simulation.DeliveryRequest
 	sortedDeliveryRequestsToBeHandledQueue = append(sortedDeliveryRequestsToBeHandledQueue, sortedDeliveryRequests...)
+	var remainingSortedDeliveryRequestsToBeHandled []*simulation.DeliveryRequest
 	for _, ts := range timelineList {
 		s.updateAllDriversWithServingDriverState(ts)
 
-		var remainingSortedDeliveryRequestsToBeHandled []*simulation.DeliveryRequest
 		for len(sortedDeliveryRequestsToBeHandledQueue) > 0 && !sortedDeliveryRequestsToBeHandledQueue[0].GetCreatedAt().AsTime().After(ts) {
 			remainingSortedDeliveryRequestsToBeHandled = append(remainingSortedDeliveryRequestsToBeHandled, sortedDeliveryRequestsToBeHandledQueue[0])
 			sortedDeliveryRequestsToBeHandledQueue = sortedDeliveryRequestsToBeHandledQueue[1:]
-
 		}
 		var remainingSortedDeliveryRequestsToBeHandledTmp []*simulation.DeliveryRequest
 		for _, req := range remainingSortedDeliveryRequestsToBeHandled {
