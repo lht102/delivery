@@ -1,12 +1,13 @@
 package simulator
 
 import (
+	"time"
+
 	"github.com/lht102/delivery/api/delivery"
 	"github.com/lht102/delivery/pkg/testingutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"time"
 )
 
 var _ = Describe("Driver", func() {
@@ -41,7 +42,7 @@ var _ = Describe("Driver", func() {
 		When("the driver can not arrive at destination within the time window", func() {
 			It("should return error", func() {
 				maxSpeedKmPerHour = 13.0
-				_, _, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, maxSpeedKmPerHour)
+				_, _, _, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, maxSpeedKmPerHour)
 				Expect(err).To(Equal(errExceedTimeWindow))
 			})
 		})
@@ -49,7 +50,7 @@ var _ = Describe("Driver", func() {
 		When("the driver can arrive at destination before the time window", func() {
 			It("should return error", func() {
 				maxSpeedKmPerHour = 60.0
-				tw, s, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, maxSpeedKmPerHour)
+				tw, s, _, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, maxSpeedKmPerHour)
 				Expect(err).To(BeNil())
 				Expect(testingutil.Float64AlmostEqual(s, 29.506799456250214)).To(BeTrue())
 				Expect(tw).To(Equal(&delivery.TimeWindow{
@@ -66,7 +67,7 @@ var _ = Describe("Driver", func() {
 		When("the driver can arrive at destination within the time window", func() {
 			It("should return error", func() {
 				maxSpeedKmPerHour = 25.0
-				tw, s, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, maxSpeedKmPerHour)
+				tw, s, _, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, maxSpeedKmPerHour)
 				Expect(err).To(BeNil())
 				Expect(s).To(Equal(maxSpeedKmPerHour))
 				Expect(tw).To(Equal(&delivery.TimeWindow{

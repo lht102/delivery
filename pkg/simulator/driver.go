@@ -225,7 +225,7 @@ func (ds *DriverState) handleDeliveryRequestWithDefaultRouting(startTime time.Ti
 }
 
 func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryRequest, restrictedTimeWindow *delivery.TimeWindow, srcLoc, dstLoc *delivery.LatLng, item *binpack.Item, isRequestDst bool) (*simulation.Route, error) {
-	tw1, speed1, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, ds.maxSpeedKmPerHour)
+	tw1, speed1, distKm, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, ds.maxSpeedKmPerHour)
 	if err != nil {
 		return nil, err
 	}
@@ -240,6 +240,7 @@ func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryR
 		SrcLoc:              srcLoc,
 		DstLoc:              dstLoc,
 		TimeWindow:          tw1,
+		Distance:            distKm,
 		VehicleState: &delivery.VehicleState{
 			VehicleCapacity: ds.vehicleCapacity,
 			BoxItems:        binpack.BoxItemsToAPIBoxItems(ds.packer.BoxItems()),
@@ -250,28 +251,28 @@ func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryR
 	return r1, nil
 }
 
-func calculateRequiredTimeWindowAndSpeedKmPerHour(curTime time.Time, restrictedTimeWindow *delivery.TimeWindow, curLoc *delivery.LatLng, dstLoc *delivery.LatLng, maxSpeedKmPerHour float64) (*delivery.TimeWindow, float64, error) {
+func calculateRequiredTimeWindowAndSpeedKmPerHour(curTime time.Time, restrictedTimeWindow *delivery.TimeWindow, curLoc *delivery.LatLng, dstLoc *delivery.LatLng, maxSpeedKmPerHour float64) (*delivery.TimeWindow, float64, float64, error) {
 	distKm := h3.PointDistKm(
 		h3.GeoCoord{Latitude: curLoc.GetLat(), Longitude: curLoc.GetLng()},
 		h3.GeoCoord{Latitude: dstLoc.GetLat(), Longitude: dstLoc.GetLng()})
 	curLocToDstLocRequiredDuration, err := distance.CalculateTravelingTime(distKm, maxSpeedKmPerHour)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 	if curTime.Add(curLocToDstLocRequiredDuration).After(restrictedTimeWindow.GetEndedAt().AsTime()) {
-		return nil, 0, errExceedTimeWindow
+		return nil, 0, distKm, errExceedTimeWindow
 	}
 	if curTime.Add(curLocToDstLocRequiredDuration).Before(restrictedTimeWindow.GetStartedAt().AsTime()) {
 		requiredSpeed := distance.CalculateRequiredSpeedKmPerHour(distKm, restrictedTimeWindow.GetStartedAt().AsTime().Sub(curTime))
 		return &delivery.TimeWindow{
 			StartedAt: &timestamppb.Timestamp{Seconds: curTime.UTC().Unix()},
 			EndedAt:   &timestamppb.Timestamp{Seconds: restrictedTimeWindow.GetStartedAt().AsTime().UTC().Unix()},
-		}, requiredSpeed, nil
+		}, requiredSpeed, distKm, nil
 	}
 	return &delivery.TimeWindow{
 		StartedAt: &timestamppb.Timestamp{Seconds: curTime.UTC().Unix()},
 		EndedAt:   &timestamppb.Timestamp{Seconds: curTime.Add(curLocToDstLocRequiredDuration).UTC().Unix()},
-	}, maxSpeedKmPerHour, nil
+	}, maxSpeedKmPerHour, distKm, nil
 }
 
 func newItemWithRequest(request *simulation.DeliveryRequest) *binpack.Item {
