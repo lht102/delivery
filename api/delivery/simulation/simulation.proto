@@ -17,12 +17,23 @@ message SimulationRequest {
 
 message SimulationResponse {
   map<string, DriverRoutingDetails> driver_routing_details_by_uuid = 1;
-  double running_time = 2;
+  map<string, DeliveryRequestResultDetails>
+      delivery_request_result_details_by_uuid = 2;
+  int64 running_time = 3;
+}
+
+message DeliveryRequestResultDetails {
+  string name = 1;
+  bool is_being_served = 2;
+  int64 total_wait_time = 3;
 }
 
 message DriverRoutingDetails {
   string name = 1;
   repeated Route routes = 2;
+  double total_distance = 3;
+  int64 total_time_spent = 4;
+  int32 num_of_served_requests = 5;
 }
 
 message DriverRequest {
@@ -54,4 +65,5 @@ message Route {
   double speed_km_per_hour = 6;
   bool is_req_src = 7;
   bool is_req_dst = 8;
+  double distance = 9;
 }
