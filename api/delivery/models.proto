@@ -43,15 +43,16 @@ message VehicleState {
 }
 
 enum RotationType {
-	Rotation_Type_WLH = 0;
-	Rotation_Type_LWH = 1;
-	Rotation_Type_LHW = 2;
-	Rotation_Type_HLW = 3;
-	Rotation_Type_HWL = 4;
-	Rotation_Type_WHL = 5;
+  Rotation_Type_WLH = 0;
+  Rotation_Type_LWH = 1;
+  Rotation_Type_LHW = 2;
+  Rotation_Type_HLW = 3;
+  Rotation_Type_HWL = 4;
+  Rotation_Type_WHL = 5;
 }
 
 message BoxItem {
+  string uuid = 7;
   int32 weight = 1;
   int32 width = 2;
   int32 length = 3;

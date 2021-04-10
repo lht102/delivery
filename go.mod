@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/go-chi/chi/v5 v5.0.1
+	github.com/go-chi/cors v1.2.0
 	github.com/golang-migrate/migrate/v4 v4.12.2
 	github.com/google/uuid v1.2.0
 	github.com/lib/pq v1.8.0

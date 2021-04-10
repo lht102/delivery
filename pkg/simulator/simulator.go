@@ -20,12 +20,14 @@ var (
 )
 
 type realtimeSimulator struct {
-	simulationRequest      *simulation.SimulationRequest
-	driverStateByUUID      map[string]*DriverState
-	availableDriverUUIDSet map[string]bool
-	servingDriverUUIDSet   map[string]bool
-	driverUUIDByGeoIndex   map[h3.H3Index]string
-	logger                 *zap.Logger
+	simulationRequest                    *simulation.SimulationRequest
+	driverStateByUUID                    map[string]*DriverState
+	availableDriverUUIDSet               map[string]bool
+	servingDriverUUIDSet                 map[string]bool
+	driverUUIDByGeoIndex                 map[h3.H3Index]string
+	deliveryRequestByUUID                map[string]*simulation.DeliveryRequest
+	notBeingServedDeliveryRequestUUIDSet map[string]bool
+	logger                               *zap.Logger
 }
 
 func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Logger) *realtimeSimulator {
@@ -40,13 +42,21 @@ func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Log
 			availableDriverUUIDSet[driverReq.GetUuid()] = true
 		}
 	}
+	notBeingServedDeliveryRequestUUIDSet := map[string]bool{}
+	deliveryRequestByUUID := make(map[string]*simulation.DeliveryRequest, len(request.GetDeliveryRequests()))
+	for _, deliveryReq := range request.GetDeliveryRequests() {
+		deliveryRequestByUUID[deliveryReq.GetUuid()] = deliveryReq
+		notBeingServedDeliveryRequestUUIDSet[deliveryReq.GetUuid()] = true
+	}
 	return &realtimeSimulator{
-		simulationRequest:      request,
-		driverStateByUUID:      driverStateByUUID,
-		availableDriverUUIDSet: availableDriverUUIDSet,
-		servingDriverUUIDSet:   map[string]bool{},
-		driverUUIDByGeoIndex:   driverUUIDByGeoIndex,
-		logger:                 logger,
+		simulationRequest:                    request,
+		driverStateByUUID:                    driverStateByUUID,
+		availableDriverUUIDSet:               availableDriverUUIDSet,
+		servingDriverUUIDSet:                 map[string]bool{},
+		driverUUIDByGeoIndex:                 driverUUIDByGeoIndex,
+		deliveryRequestByUUID:                deliveryRequestByUUID,
+		notBeingServedDeliveryRequestUUIDSet: notBeingServedDeliveryRequestUUIDSet,
+		logger:                               logger,
 	}
 }
 
@@ -56,6 +66,7 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 	var sortedDeliveryRequestsToBeHandledQueue []*simulation.DeliveryRequest
 	sortedDeliveryRequestsToBeHandledQueue = append(sortedDeliveryRequestsToBeHandledQueue, sortedDeliveryRequests...)
 	var remainingSortedDeliveryRequestsToBeHandled []*simulation.DeliveryRequest
+	timeNow := time.Now()
 	for _, ts := range timelineList {
 		s.updateAllDriversWithServingDriverState(ts)
 
@@ -88,23 +99,55 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 			isCurrentReqHandled := s.handleCurrentDeliveryRequestWithSuitableDrivers(driversNearbySrcLoc, ts, req)
 			if !isCurrentReqHandled {
 				remainingSortedDeliveryRequestsToBeHandledTmp = append(remainingSortedDeliveryRequestsToBeHandledTmp, req)
+			} else {
+				delete(s.notBeingServedDeliveryRequestUUIDSet, req.GetUuid())
 			}
 		}
 		remainingSortedDeliveryRequestsToBeHandled = calculateRemainingSortedDeliveryRequestsToBeHandled(remainingSortedDeliveryRequestsToBeHandledTmp, ts)
 	}
 	s.updateAllDriversWithServingDriverState(time.Unix(math.MaxInt64, 0))
+	return s.constructSimulationResponse(time.Since(timeNow))
+}
 
+func (s *realtimeSimulator) constructSimulationResponse(elapsedTime time.Duration) *simulation.SimulationResponse {
 	driverRoutingDetailsByUUID := make(map[string]*simulation.DriverRoutingDetails, len(s.driverStateByUUID))
+	deliveryRequestResultDetailsByUUID := make(map[string]*simulation.DeliveryRequestResultDetails, len(s.simulationRequest.GetDeliveryRequests()))
+	for _, req := range s.simulationRequest.GetDeliveryRequests() {
+		deliveryRequestResultDetailsByUUID[req.GetUuid()] = &simulation.DeliveryRequestResultDetails{
+			Name:          req.GetName(),
+			IsBeingServed: !s.notBeingServedDeliveryRequestUUIDSet[req.GetUuid()],
+		}
+	}
 	for driverUUID, ds := range s.driverStateByUUID {
 		routes := []*simulation.Route{}
 		routes = append(routes, ds.finishedRoutes...)
+
+		deliveryRequestUUIDSet := map[string]bool{}
+		totalDistance := 0.0
+		totalTimeSpent := int64(0)
+		for _, route := range routes {
+			totalDistance += route.GetDistance()
+			totalTimeSpent += route.GetTimeWindow().GetEndedAt().GetSeconds() - route.GetTimeWindow().GetStartedAt().GetSeconds()
+			if !deliveryRequestUUIDSet[route.GetDeliveryRequestUuid()] {
+				deliveryRequestResultDetailsByUUID[route.GetDeliveryRequestUuid()].TotalWaitTime += route.GetTimeWindow().GetEndedAt().GetSeconds() - s.deliveryRequestByUUID[route.GetDeliveryRequestUuid()].GetSrcTimeWindow().GetStartedAt().GetSeconds()
+			}
+			if route.GetIsReqDst() {
+				deliveryRequestResultDetailsByUUID[route.GetDeliveryRequestUuid()].TotalWaitTime += route.GetTimeWindow().GetEndedAt().GetSeconds() - s.deliveryRequestByUUID[route.GetDeliveryRequestUuid()].GetDstTimeWindow().GetStartedAt().GetSeconds()
+			}
+			deliveryRequestUUIDSet[route.GetDeliveryRequestUuid()] = true
+		}
 		driverRoutingDetailsByUUID[driverUUID] = &simulation.DriverRoutingDetails{
-			Name:   ds.name,
-			Routes: routes,
+			Name:                ds.name,
+			TotalDistance:       totalDistance,
+			TotalTimeSpent:      totalTimeSpent,
+			NumOfServedRequests: int32(len(deliveryRequestUUIDSet)),
+			Routes:              routes,
 		}
 	}
 	return &simulation.SimulationResponse{
-		DriverRoutingDetailsByUuid: driverRoutingDetailsByUUID,
+		DeliveryRequestResultDetailsByUuid: deliveryRequestResultDetailsByUUID,
+		DriverRoutingDetailsByUuid:         driverRoutingDetailsByUUID,
+		RunningTime:                        int64(elapsedTime),
 	}
 }
 
