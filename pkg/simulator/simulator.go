@@ -73,10 +73,7 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 	}
 	sort.SliceStable(driverStates, func(i, j int) bool {
 		cmp := strings.Compare(driverStates[i].uuid, driverStates[j].uuid)
-		if cmp < 0 {
-			return false
-		}
-		return true
+		return cmp >= 0
 	})
 	timeNow := time.Now()
 	for _, ts := range timelineList {
@@ -101,9 +98,7 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 			// 	}
 			// }
 			driversNearbySrcLoc := []*DriverState{}
-			for _, ds := range driverStates {
-				driversNearbySrcLoc = append(driversNearbySrcLoc, ds)
-			}
+			driversNearbySrcLoc = append(driversNearbySrcLoc, driverStates...)
 
 			if s.simulationRequest.GetUseAlternativeForDriverMatching() {
 				sort.SliceStable(driversNearbySrcLoc, func(i, j int) bool {
