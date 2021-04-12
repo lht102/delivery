@@ -25,6 +25,7 @@ type DriverState struct {
 	vehicleCapacity       *delivery.VehicleCapacity
 	maxSpeedKmPerHour     float64
 	numOfServingRequests  int
+	numOfServedRequests   int
 	status                delivery.DriverStatus
 	packer                binpack.Packer
 	curGeoIndex           h3.H3Index
@@ -99,6 +100,7 @@ func (ds *DriverState) updateInternalStateWithTime(curTime time.Time) {
 		finishRouteCnt++
 		if route.GetIsReqDst() {
 			ds.numOfServingRequests--
+			ds.numOfServedRequests++
 			delete(ds.servingRequestsByUUID, route.GetDeliveryRequestUuid())
 			err := ds.packer.RemoveItem(route.GetDeliveryRequestUuid())
 			if err != nil {
@@ -142,6 +144,10 @@ func (ds *DriverState) NumOfServingRequests() int {
 	return ds.numOfServingRequests
 }
 
+func (ds *DriverState) NumOfServedRequests() int {
+	return ds.numOfServedRequests
+}
+
 func findSuitableRoutingPackerPair(routesPackerPairs []routesPackerPair) (routesPackerPair, error) {
 	if len(routesPackerPairs) == 0 {
 		return routesPackerPair{}, errors.New("not able to handle incoming request")
@@ -165,7 +171,7 @@ func findSuitableRoutingPackerPair(routesPackerPairs []routesPackerPair) (routes
 
 func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
 	// S(i) -> S(i+1) -> D(i+1) -> D(i)
-	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetDstLoc(), request.GetSrcLoc(), nil, false)
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetSrcLoc(), request.GetSrcLoc(), nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +193,7 @@ func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.
 
 func (ds *DriverState) handleDeliveryRequestWithRoutingMethodTwo(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
 	// S(i) -> S(i+1) -> D(i) -> D(i+1)
-	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetDstLoc(), request.GetSrcLoc(), nil, false)
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetSrcLoc(), request.GetSrcLoc(), nil, false)
 	if err != nil {
 		return nil, err
 	}
