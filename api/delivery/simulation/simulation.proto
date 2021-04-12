@@ -13,6 +13,7 @@ message SimulationRequest {
 
   // options
   bool support_retracement = 4;
+  bool use_alternative_for_driver_matching = 5;
 }
 
 message SimulationResponse {
