@@ -1,0 +1,81 @@
+{
+  "deliveryRequests": [
+    {
+      "uuid": "dd73a703-4cc6-49b2-b619-03122adacd4e",
+      "name": "Delivery Request 0",
+      "goodsMetadata": {
+        "name": "Goods 0",
+        "weight": 2,
+        "length": 2,
+        "width": 1,
+        "height": 1
+      },
+      "srcLoc": {
+        "lat": 22.37333305186423,
+        "lng": 114.11745786666872
+      },
+      "dstLoc": {
+        "lat": 22.370654300843018,
+        "lng": 114.12561178207399
+      },
+      "srcTimeWindow": {
+        "startedAt": "2021-04-16T04:00:00Z",
+        "endedAt": "2021-04-16T04:15:00Z"
+      },
+      "dstTimeWindow": {
+        "startedAt": "2021-04-16T04:20:10Z",
+        "endedAt": "2021-04-16T04:35:00Z"
+      },
+      "createdAt": "2021-04-16T03:45:00Z"
+    },
+    {
+      "uuid": "e5adab10-caa3-454a-97cb-f3d6a5fceb1e",
+      "name": "Delivery Request 1",
+      "goodsMetadata": {
+        "name": "Goods 1",
+        "weight": 2,
+        "length": 1,
+        "width": 1,
+        "height": 2
+      },
+      "srcLoc": {
+        "lat": 22.36807471410479,
+        "lng": 114.12846565246583
+      },
+      "dstLoc": {
+        "lat": 22.3627368020899,
+        "lng": 114.13177013397218
+      },
+      "srcTimeWindow": {
+        "startedAt": "2021-04-16T05:00:00Z",
+        "endedAt": "2021-04-16T05:15:00Z"
+      },
+      "dstTimeWindow": {
+        "startedAt": "2021-04-16T05:30:10Z",
+        "endedAt": "2021-04-16T05:45:00Z"
+      },
+      "createdAt": "2021-04-16T04:55:00Z"
+    }
+  ],
+  "driverRequests": [
+    {
+      "uuid": "e517086d-1e30-4bb0-b044-93cb33d152ae",
+      "name": "Driver 0",
+      "vehicleCapacity": {
+        "weight": 2,
+        "length": 1,
+        "width": 2,
+        "height": 1
+      },
+      "maxSpeedKmPerHour": 25,
+      "loc": {
+        "lat": 22.370316972986064,
+        "lng": 114.11584854125978
+      },
+      "createdAt": "2021-04-16T03:15:00Z"
+    }
+  ],
+  "useAlternativeForDriverMatching": false,
+  "supportRetracement": false,
+  "createdAt": "2021-04-16T03:00:00Z"
+}
