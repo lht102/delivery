@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	h3Resolution = 7
+	h3Resolution = 6
 )
 
 type realtimeSimulator struct {
@@ -25,7 +25,7 @@ type realtimeSimulator struct {
 	driverStateByUUID                    map[string]*DriverState
 	availableDriverUUIDSet               map[string]bool
 	servingDriverUUIDSet                 map[string]bool
-	driverUUIDByGeoIndex                 map[h3.H3Index]string
+	driverUUIDsByGeoIndex                map[h3.H3Index][]string
 	deliveryRequestByUUID                map[string]*simulation.DeliveryRequest
 	notBeingServedDeliveryRequestUUIDSet map[string]bool
 	logger                               *zap.Logger
@@ -34,10 +34,10 @@ type realtimeSimulator struct {
 func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Logger) *realtimeSimulator {
 	startedAt := request.GetCreatedAt().AsTime()
 	driverStateByUUID := make(map[string]*DriverState, len(request.GetDriverRequests()))
-	driverUUIDByGeoIndex := map[h3.H3Index]string{}
+	driverUUIDsByGeoIndex := map[h3.H3Index][]string{}
 	availableDriverUUIDSet := map[string]bool{}
 	for _, driverReq := range request.GetDriverRequests() {
-		ds := newDriverState(startedAt, driverReq, driverUUIDByGeoIndex, logger)
+		ds := newDriverState(startedAt, driverReq, driverUUIDsByGeoIndex, logger)
 		driverStateByUUID[driverReq.GetUuid()] = ds
 		if driverReq.GetCreatedAt().GetSeconds() >= startedAt.Unix() {
 			availableDriverUUIDSet[driverReq.GetUuid()] = true
@@ -54,7 +54,7 @@ func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Log
 		driverStateByUUID:                    driverStateByUUID,
 		availableDriverUUIDSet:               availableDriverUUIDSet,
 		servingDriverUUIDSet:                 map[string]bool{},
-		driverUUIDByGeoIndex:                 driverUUIDByGeoIndex,
+		driverUUIDsByGeoIndex:                driverUUIDsByGeoIndex,
 		deliveryRequestByUUID:                deliveryRequestByUUID,
 		notBeingServedDeliveryRequestUUIDSet: notBeingServedDeliveryRequestUUIDSet,
 		logger:                               logger,
@@ -89,12 +89,15 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 			// TODO: implement different way to select drivers
 			srcLoc := req.GetSrcLoc()
 			// srcGeoIndex := h3.FromGeo(h3.GeoCoord{Latitude: srcLoc.GetLat(), Longitude: srcLoc.GetLng()}, h3Resolution)
-			// srcRingGeoIndices := h3.KRing(srcGeoIndex, 3)
+			// srcRingGeoIndices := h3.KRing(srcGeoIndex, 8)
 			// var driversNearbySrcLoc []*DriverState
 			// for _, geoIndex := range srcRingGeoIndices {
-			// 	driverUUID, ok := s.driverUUIDByGeoIndex[geoIndex]
+			// 	driverUUIDs, ok := s.driverUUIDsByGeoIndex[geoIndex]
+			// 	log.Println(driverUUIDs)
 			// 	if ok {
-			// 		driversNearbySrcLoc = append(driversNearbySrcLoc, s.driverStateByUUID[driverUUID])
+			// 		for _, uuid := range driverUUIDs {
+			// 			driversNearbySrcLoc = append(driversNearbySrcLoc, s.driverStateByUUID[uuid])
+			// 		}
 			// 	}
 			// }
 			driversNearbySrcLoc := []*DriverState{}
@@ -255,13 +258,13 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 				}
 
 				ds.packer = binpack.NewBoxCopy(boxCopy2)
-				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request)
+				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request, false)
 				if err2 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes1, packer: ds.packer})
 				}
 
 				ds.packer = binpack.NewBoxCopy(boxCopy3)
-				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request)
+				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request, false)
 				if err3 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes2, packer: ds.packer})
 				}
@@ -300,13 +303,13 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 				}
 
 				ds.packer = binpack.NewBoxCopy(boxCopy2)
-				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request)
+				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request, true)
 				if err2 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes1, packer: ds.packer})
 				}
 
 				ds.packer = binpack.NewBoxCopy(boxCopy3)
-				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request)
+				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request, true)
 				if err3 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes2, packer: ds.packer})
 				}

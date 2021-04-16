@@ -34,7 +34,7 @@ type DriverState struct {
 	unfinishedRoutes      []*simulation.Route
 	finishedRoutes        []*simulation.Route
 	createdAt             time.Time
-	driverUUIDByGeoIndex  map[h3.H3Index]string
+	driverUUIDsByGeoIndex map[h3.H3Index][]string
 	lastUpdatedTime       time.Time
 	logger                *zap.Logger
 }
@@ -44,7 +44,7 @@ type routesPackerPair struct {
 	packer binpack.Packer
 }
 
-func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, driverUUIDByGeoIndex map[h3.H3Index]string, logger *zap.Logger) *DriverState {
+func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, driverUUIDsByGeoIndex map[h3.H3Index][]string, logger *zap.Logger) *DriverState {
 	var status delivery.DriverStatus
 	if driverRequest.GetCreatedAt().AsTime().Unix() > curTime.Unix() {
 		status = delivery.DriverStatus_DRIVER_STATUS_OFFLINE
@@ -58,7 +58,7 @@ func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, 
 		Longitude: loc.GetLng(),
 	}
 	geoIndex := h3.FromGeo(geo, h3Resolution)
-	driverUUIDByGeoIndex[geoIndex] = driverRequest.GetUuid()
+	driverUUIDsByGeoIndex[geoIndex] = append(driverUUIDsByGeoIndex[geoIndex], driverRequest.GetUuid())
 	return &DriverState{
 		uuid:                  driverRequest.GetUuid(),
 		name:                  driverRequest.GetName(),
@@ -72,7 +72,7 @@ func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, 
 		unfinishedRoutes:      []*simulation.Route{},
 		finishedRoutes:        []*simulation.Route{},
 		createdAt:             driverRequest.GetCreatedAt().AsTime(),
-		driverUUIDByGeoIndex:  driverUUIDByGeoIndex,
+		driverUUIDsByGeoIndex: driverUUIDsByGeoIndex,
 		lastUpdatedTime:       curTime,
 		logger:                logger,
 	}
@@ -127,13 +127,16 @@ func (ds *DriverState) updateInternalStateWithTime(curTime time.Time) {
 			Lng: midLng,
 		}
 	}
-	delete(ds.driverUUIDByGeoIndex, ds.curGeoIndex)
+	searchedIndex := searchElementFromStringSlice(ds.driverUUIDsByGeoIndex[ds.curGeoIndex], ds.uuid)
+	if searchedIndex != -1 {
+		removeElementFromStringSlice(ds.driverUUIDsByGeoIndex[ds.curGeoIndex], searchedIndex)
+	}
 	geo := h3.GeoCoord{
 		Latitude:  ds.curLoc.GetLat(),
 		Longitude: ds.curLoc.GetLng(),
 	}
 	ds.curGeoIndex = h3.FromGeo(geo, h3Resolution)
-	ds.driverUUIDByGeoIndex[ds.curGeoIndex] = ds.uuid
+	ds.driverUUIDsByGeoIndex[ds.curGeoIndex] = append(ds.driverUUIDsByGeoIndex[ds.curGeoIndex], ds.uuid)
 }
 
 func (ds *DriverState) Status() delivery.DriverStatus {
@@ -169,9 +172,13 @@ func findSuitableRoutingPackerPair(routesPackerPairs []routesPackerPair) (routes
 	return res, nil
 }
 
-func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
+func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest, isServingLastRoute bool) ([]*simulation.Route, error) {
 	// S(i) -> S(i+1) -> D(i+1) -> D(i)
-	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetSrcLoc(), request.GetSrcLoc(), nil, false)
+	startLoc := lastUnfinishedRoute.GetSrcLoc()
+	if isServingLastRoute {
+		startLoc = lastUnfinishedRoute.GetDstLoc()
+	}
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), startLoc, request.GetSrcLoc(), nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +198,13 @@ func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.
 	return []*simulation.Route{r1, r2, r3}, nil
 }
 
-func (ds *DriverState) handleDeliveryRequestWithRoutingMethodTwo(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
+func (ds *DriverState) handleDeliveryRequestWithRoutingMethodTwo(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest, isServingLastRoute bool) ([]*simulation.Route, error) {
 	// S(i) -> S(i+1) -> D(i) -> D(i+1)
-	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetSrcLoc(), request.GetSrcLoc(), nil, false)
+	startLoc := lastUnfinishedRoute.GetSrcLoc()
+	if isServingLastRoute {
+		startLoc = lastUnfinishedRoute.GetDstLoc()
+	}
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), startLoc, request.GetSrcLoc(), nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -288,4 +299,18 @@ func newItemWithRequest(request *simulation.DeliveryRequest) *binpack.Item {
 		int(request.GetGoodsMetadata().GetWidth()),
 		int(request.GetGoodsMetadata().GetLength()),
 		int(request.GetGoodsMetadata().GetHeight()))
+}
+
+func removeElementFromStringSlice(s []string, i int) []string {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
+
+func searchElementFromStringSlice(s []string, target string) int {
+	for i, v := range s {
+		if v == target {
+			return i
+		}
+	}
+	return -1
 }
