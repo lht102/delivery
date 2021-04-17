@@ -38,7 +38,8 @@ test: static-check lint test-all-packages test-coverage
 build:
 	@rm -rf bin/
 	@mkdir bin/
-	@cd bin && go build -v ../cmd/... 
+	@cd bin && go build -v -o . ../cmd/requestgen
+	@cd bin && go build -v -o . ../cmd/deliveryd
 
 .PHONY: run
 run:

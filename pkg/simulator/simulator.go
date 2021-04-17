@@ -3,6 +3,7 @@ package simulator
 import (
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	h3Resolution = 8
+	h3Resolution = 6
 )
 
 type realtimeSimulator struct {
@@ -24,7 +25,7 @@ type realtimeSimulator struct {
 	driverStateByUUID                    map[string]*DriverState
 	availableDriverUUIDSet               map[string]bool
 	servingDriverUUIDSet                 map[string]bool
-	driverUUIDByGeoIndex                 map[h3.H3Index]string
+	driverUUIDsByGeoIndex                map[h3.H3Index][]string
 	deliveryRequestByUUID                map[string]*simulation.DeliveryRequest
 	notBeingServedDeliveryRequestUUIDSet map[string]bool
 	logger                               *zap.Logger
@@ -33,10 +34,10 @@ type realtimeSimulator struct {
 func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Logger) *realtimeSimulator {
 	startedAt := request.GetCreatedAt().AsTime()
 	driverStateByUUID := make(map[string]*DriverState, len(request.GetDriverRequests()))
-	driverUUIDByGeoIndex := map[h3.H3Index]string{}
+	driverUUIDsByGeoIndex := map[h3.H3Index][]string{}
 	availableDriverUUIDSet := map[string]bool{}
 	for _, driverReq := range request.GetDriverRequests() {
-		ds := newDriverState(startedAt, driverReq, driverUUIDByGeoIndex, logger)
+		ds := newDriverState(startedAt, driverReq, driverUUIDsByGeoIndex, logger)
 		driverStateByUUID[driverReq.GetUuid()] = ds
 		if driverReq.GetCreatedAt().GetSeconds() >= startedAt.Unix() {
 			availableDriverUUIDSet[driverReq.GetUuid()] = true
@@ -53,7 +54,7 @@ func NewRealTimeSimulator(request *simulation.SimulationRequest, logger *zap.Log
 		driverStateByUUID:                    driverStateByUUID,
 		availableDriverUUIDSet:               availableDriverUUIDSet,
 		servingDriverUUIDSet:                 map[string]bool{},
-		driverUUIDByGeoIndex:                 driverUUIDByGeoIndex,
+		driverUUIDsByGeoIndex:                driverUUIDsByGeoIndex,
 		deliveryRequestByUUID:                deliveryRequestByUUID,
 		notBeingServedDeliveryRequestUUIDSet: notBeingServedDeliveryRequestUUIDSet,
 		logger:                               logger,
@@ -66,6 +67,14 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 	var sortedDeliveryRequestsToBeHandledQueue []*simulation.DeliveryRequest
 	sortedDeliveryRequestsToBeHandledQueue = append(sortedDeliveryRequestsToBeHandledQueue, sortedDeliveryRequests...)
 	var remainingSortedDeliveryRequestsToBeHandled []*simulation.DeliveryRequest
+	driverStates := []*DriverState{}
+	for _, ds := range s.driverStateByUUID {
+		driverStates = append(driverStates, ds)
+	}
+	sort.SliceStable(driverStates, func(i, j int) bool {
+		cmp := strings.Compare(driverStates[i].uuid, driverStates[j].uuid)
+		return cmp >= 0
+	})
 	timeNow := time.Now()
 	for _, ts := range timelineList {
 		s.updateAllDriversWithServingDriverState(ts)
@@ -78,22 +87,79 @@ func (s *realtimeSimulator) HandleSimulationRequest() *simulation.SimulationResp
 		for _, req := range remainingSortedDeliveryRequestsToBeHandled {
 
 			// TODO: implement different way to select drivers
-			// srcLoc := req.GetSrcLoc()
+			srcLoc := req.GetSrcLoc()
 			// srcGeoIndex := h3.FromGeo(h3.GeoCoord{Latitude: srcLoc.GetLat(), Longitude: srcLoc.GetLng()}, h3Resolution)
-			// srcRingGeoIndices := h3.KRing(srcGeoIndex, 1)
+			// srcRingGeoIndices := h3.KRing(srcGeoIndex, 8)
 			// var driversNearbySrcLoc []*DriverState
 			// for _, geoIndex := range srcRingGeoIndices {
-			// 	driverUUID, ok := s.driverUUIDByGeoIndex[geoIndex]
+			// 	driverUUIDs, ok := s.driverUUIDsByGeoIndex[geoIndex]
+			// 	log.Println(driverUUIDs)
 			// 	if ok {
-			// 		driversNearbySrcLoc = append(driversNearbySrcLoc, s.driverStateByUUID[driverUUID])
+			// 		for _, uuid := range driverUUIDs {
+			// 			driversNearbySrcLoc = append(driversNearbySrcLoc, s.driverStateByUUID[uuid])
+			// 		}
 			// 	}
 			// }
-			// sort.Slice(driversNearbySrcLoc, func(i, j int) bool {
-			// 	return driversNearbySrcLoc[i].NumOfServingRequests() < driversNearbySrcLoc[j].NumOfServingRequests()
-			// })
 			driversNearbySrcLoc := []*DriverState{}
-			for _, ds := range s.driverStateByUUID {
-				driversNearbySrcLoc = append(driversNearbySrcLoc, ds)
+			driversNearbySrcLoc = append(driversNearbySrcLoc, driverStates...)
+
+			if s.simulationRequest.GetUseAlternativeForDriverMatching() {
+				sort.SliceStable(driversNearbySrcLoc, func(i, j int) bool {
+					h3Src := h3.GeoCoord{
+						Latitude:  srcLoc.GetLat(),
+						Longitude: srcLoc.GetLng(),
+					}
+					srcToCurLocIDist := h3.PointDistKm(h3.GeoCoord{
+						Latitude:  driversNearbySrcLoc[i].curLoc.GetLat(),
+						Longitude: driversNearbySrcLoc[i].curLoc.GetLng(),
+					}, h3Src)
+					srcToCurLocJDist := h3.PointDistKm(h3.GeoCoord{
+						Latitude:  driversNearbySrcLoc[j].curLoc.GetLat(),
+						Longitude: driversNearbySrcLoc[j].curLoc.GetLng(),
+					}, h3Src)
+					if len(driversNearbySrcLoc[i].unfinishedRoutes) == 0 && len(driversNearbySrcLoc[j].unfinishedRoutes) == 0 {
+						return srcToCurLocIDist < srcToCurLocJDist
+					}
+
+					if len(driversNearbySrcLoc[i].unfinishedRoutes) == 0 {
+						lastUnfinishedRouteJ := driversNearbySrcLoc[j].unfinishedRoutes[len(driversNearbySrcLoc[j].unfinishedRoutes)-1]
+						return srcToCurLocIDist < h3.PointDistKm(h3.GeoCoord{
+							Latitude:  lastUnfinishedRouteJ.GetSrcLoc().GetLat(),
+							Longitude: lastUnfinishedRouteJ.GetSrcLoc().GetLng(),
+						}, h3Src)
+					}
+					if len(driversNearbySrcLoc[j].unfinishedRoutes) == 0 {
+						lastUnfinishedRouteI := driversNearbySrcLoc[i].unfinishedRoutes[len(driversNearbySrcLoc[i].unfinishedRoutes)-1]
+						return h3.PointDistKm(h3.GeoCoord{
+							Latitude:  lastUnfinishedRouteI.GetSrcLoc().GetLat(),
+							Longitude: lastUnfinishedRouteI.GetSrcLoc().GetLng(),
+						}, h3Src) < srcToCurLocJDist
+					}
+					lastUnfinishedRouteI := driversNearbySrcLoc[i].unfinishedRoutes[len(driversNearbySrcLoc[i].unfinishedRoutes)-1]
+					lastUnfinishedRouteJ := driversNearbySrcLoc[j].unfinishedRoutes[len(driversNearbySrcLoc[j].unfinishedRoutes)-1]
+
+					return h3.PointDistKm(h3.GeoCoord{
+						Latitude:  lastUnfinishedRouteI.GetSrcLoc().GetLat(),
+						Longitude: lastUnfinishedRouteI.GetSrcLoc().GetLng(),
+					}, h3Src) < h3.PointDistKm(h3.GeoCoord{
+						Latitude:  lastUnfinishedRouteJ.GetSrcLoc().GetLat(),
+						Longitude: lastUnfinishedRouteJ.GetSrcLoc().GetLng(),
+					}, h3Src)
+				})
+			} else {
+				sort.SliceStable(driversNearbySrcLoc, func(i, j int) bool {
+					h3Src := h3.GeoCoord{
+						Latitude:  srcLoc.GetLat(),
+						Longitude: srcLoc.GetLng(),
+					}
+					return h3.PointDistM(h3.GeoCoord{
+						Latitude:  driversNearbySrcLoc[i].curLoc.GetLat(),
+						Longitude: driversNearbySrcLoc[i].curLoc.GetLng(),
+					}, h3Src) < h3.PointDistM(h3.GeoCoord{
+						Latitude:  driversNearbySrcLoc[j].curLoc.GetLat(),
+						Longitude: driversNearbySrcLoc[j].curLoc.GetLng(),
+					}, h3Src)
+				})
 			}
 
 			isCurrentReqHandled := s.handleCurrentDeliveryRequestWithSuitableDrivers(driversNearbySrcLoc, ts, req)
@@ -179,21 +245,26 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 			if len(ds.unfinishedRoutes) > 1 {
 				lastUnfinishedRoute := ds.unfinishedRoutes[len(ds.unfinishedRoutes)-1]
 				var routesPackerPairs []routesPackerPair
+
+				boxCopy1 := binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+				boxCopy2 := binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+				boxCopy3 := binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+
 				// default
-				ds.packer = binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+				ds.packer = binpack.NewBoxCopy(boxCopy1)
 				routes, err1 := ds.handleDeliveryRequestWithDefaultRouting(lastUnfinishedRoute.GetTimeWindow().GetEndedAt().AsTime(), request, lastUnfinishedRoute.GetDstLoc())
 				if err1 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes, packer: ds.packer})
 				}
 
-				ds.packer = binpack.NewBoxCopy(ds.packer.(*binpack.Box))
-				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request)
+				ds.packer = binpack.NewBoxCopy(boxCopy2)
+				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request, false)
 				if err2 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes1, packer: ds.packer})
 				}
 
-				ds.packer = binpack.NewBoxCopy(ds.packer.(*binpack.Box))
-				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request)
+				ds.packer = binpack.NewBoxCopy(boxCopy3)
+				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(lastUnfinishedRoute.GetTimeWindow().GetStartedAt().AsTime(), lastUnfinishedRoute, request, false)
 				if err3 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes2, packer: ds.packer})
 				}
@@ -206,6 +277,7 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 				// not default routing
 				if len(pair.routes) > 2 {
 					ds.unfinishedRoutes[len(ds.unfinishedRoutes)-1] = nil
+					ds.unfinishedRoutes = ds.unfinishedRoutes[:len(ds.unfinishedRoutes)-1]
 				}
 				ds.unfinishedRoutes = append(ds.unfinishedRoutes, pair.routes...)
 			} else {
@@ -218,21 +290,26 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 
 				lastUnfinishedRoute := ds.unfinishedRoutes[len(ds.unfinishedRoutes)-1]
 				var routesPackerPairs []routesPackerPair
+
+				boxCopy1 := binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+				boxCopy2 := binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+				boxCopy3 := binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+
 				// default
-				ds.packer = binpack.NewBoxCopy(ds.packer.(*binpack.Box))
+				ds.packer = binpack.NewBoxCopy(boxCopy1)
 				routes, err1 := ds.handleDeliveryRequestWithDefaultRouting(lastUnfinishedRoute.GetTimeWindow().GetEndedAt().AsTime(), request, lastUnfinishedRoute.GetDstLoc())
 				if err1 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes, packer: ds.packer})
 				}
 
-				ds.packer = binpack.NewBoxCopy(ds.packer.(*binpack.Box))
-				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request)
+				ds.packer = binpack.NewBoxCopy(boxCopy2)
+				routes1, err2 := ds.handleDeliveryRequestWithRoutingMethodOne(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request, true)
 				if err2 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes1, packer: ds.packer})
 				}
 
-				ds.packer = binpack.NewBoxCopy(ds.packer.(*binpack.Box))
-				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request)
+				ds.packer = binpack.NewBoxCopy(boxCopy3)
+				routes2, err3 := ds.handleDeliveryRequestWithRoutingMethodTwo(firstHalfRoute.GetTimeWindow().GetEndedAt().AsTime(), firstHalfRoute, request, true)
 				if err3 == nil {
 					routesPackerPairs = append(routesPackerPairs, routesPackerPair{routes: routes2, packer: ds.packer})
 				}
@@ -260,6 +337,7 @@ func (s *realtimeSimulator) handleDeliveryRequest(curTime time.Time, request *si
 	ds.status = delivery.DriverStatus_DRIVER_STATUS_SERVING
 	ds.servingRequestsByUUID[request.GetUuid()] = request
 	s.servingDriverUUIDSet[ds.uuid] = true
+	ds.numOfServingRequests++
 	return nil
 }
 
