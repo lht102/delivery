@@ -25,6 +25,7 @@ type DriverState struct {
 	vehicleCapacity       *delivery.VehicleCapacity
 	maxSpeedKmPerHour     float64
 	numOfServingRequests  int
+	numOfServedRequests   int
 	status                delivery.DriverStatus
 	packer                binpack.Packer
 	curGeoIndex           h3.H3Index
@@ -33,7 +34,7 @@ type DriverState struct {
 	unfinishedRoutes      []*simulation.Route
 	finishedRoutes        []*simulation.Route
 	createdAt             time.Time
-	driverUUIDByGeoIndex  map[h3.H3Index]string
+	driverUUIDsByGeoIndex map[h3.H3Index][]string
 	lastUpdatedTime       time.Time
 	logger                *zap.Logger
 }
@@ -43,7 +44,7 @@ type routesPackerPair struct {
 	packer binpack.Packer
 }
 
-func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, driverUUIDByGeoIndex map[h3.H3Index]string, logger *zap.Logger) *DriverState {
+func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, driverUUIDsByGeoIndex map[h3.H3Index][]string, logger *zap.Logger) *DriverState {
 	var status delivery.DriverStatus
 	if driverRequest.GetCreatedAt().AsTime().Unix() > curTime.Unix() {
 		status = delivery.DriverStatus_DRIVER_STATUS_OFFLINE
@@ -57,7 +58,7 @@ func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, 
 		Longitude: loc.GetLng(),
 	}
 	geoIndex := h3.FromGeo(geo, h3Resolution)
-	driverUUIDByGeoIndex[geoIndex] = driverRequest.GetUuid()
+	driverUUIDsByGeoIndex[geoIndex] = append(driverUUIDsByGeoIndex[geoIndex], driverRequest.GetUuid())
 	return &DriverState{
 		uuid:                  driverRequest.GetUuid(),
 		name:                  driverRequest.GetName(),
@@ -71,7 +72,7 @@ func newDriverState(curTime time.Time, driverRequest *simulation.DriverRequest, 
 		unfinishedRoutes:      []*simulation.Route{},
 		finishedRoutes:        []*simulation.Route{},
 		createdAt:             driverRequest.GetCreatedAt().AsTime(),
-		driverUUIDByGeoIndex:  driverUUIDByGeoIndex,
+		driverUUIDsByGeoIndex: driverUUIDsByGeoIndex,
 		lastUpdatedTime:       curTime,
 		logger:                logger,
 	}
@@ -99,6 +100,7 @@ func (ds *DriverState) updateInternalStateWithTime(curTime time.Time) {
 		finishRouteCnt++
 		if route.GetIsReqDst() {
 			ds.numOfServingRequests--
+			ds.numOfServedRequests++
 			delete(ds.servingRequestsByUUID, route.GetDeliveryRequestUuid())
 			err := ds.packer.RemoveItem(route.GetDeliveryRequestUuid())
 			if err != nil {
@@ -125,13 +127,16 @@ func (ds *DriverState) updateInternalStateWithTime(curTime time.Time) {
 			Lng: midLng,
 		}
 	}
-	delete(ds.driverUUIDByGeoIndex, ds.curGeoIndex)
+	searchedIndex := searchElementFromStringSlice(ds.driverUUIDsByGeoIndex[ds.curGeoIndex], ds.uuid)
+	if searchedIndex != -1 {
+		removeElementFromStringSlice(ds.driverUUIDsByGeoIndex[ds.curGeoIndex], searchedIndex)
+	}
 	geo := h3.GeoCoord{
 		Latitude:  ds.curLoc.GetLat(),
 		Longitude: ds.curLoc.GetLng(),
 	}
 	ds.curGeoIndex = h3.FromGeo(geo, h3Resolution)
-	ds.driverUUIDByGeoIndex[ds.curGeoIndex] = ds.uuid
+	ds.driverUUIDsByGeoIndex[ds.curGeoIndex] = append(ds.driverUUIDsByGeoIndex[ds.curGeoIndex], ds.uuid)
 }
 
 func (ds *DriverState) Status() delivery.DriverStatus {
@@ -140,6 +145,10 @@ func (ds *DriverState) Status() delivery.DriverStatus {
 
 func (ds *DriverState) NumOfServingRequests() int {
 	return ds.numOfServingRequests
+}
+
+func (ds *DriverState) NumOfServedRequests() int {
+	return ds.numOfServedRequests
 }
 
 func findSuitableRoutingPackerPair(routesPackerPairs []routesPackerPair) (routesPackerPair, error) {
@@ -163,9 +172,13 @@ func findSuitableRoutingPackerPair(routesPackerPairs []routesPackerPair) (routes
 	return res, nil
 }
 
-func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
+func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest, isServingLastRoute bool) ([]*simulation.Route, error) {
 	// S(i) -> S(i+1) -> D(i+1) -> D(i)
-	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetDstLoc(), request.GetSrcLoc(), nil, false)
+	startLoc := lastUnfinishedRoute.GetSrcLoc()
+	if isServingLastRoute {
+		startLoc = lastUnfinishedRoute.GetDstLoc()
+	}
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), startLoc, request.GetSrcLoc(), nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -185,9 +198,13 @@ func (ds *DriverState) handleDeliveryRequestWithRoutingMethodOne(startTime time.
 	return []*simulation.Route{r1, r2, r3}, nil
 }
 
-func (ds *DriverState) handleDeliveryRequestWithRoutingMethodTwo(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest) ([]*simulation.Route, error) {
+func (ds *DriverState) handleDeliveryRequestWithRoutingMethodTwo(startTime time.Time, lastUnfinishedRoute *simulation.Route, request *simulation.DeliveryRequest, isServingLastRoute bool) ([]*simulation.Route, error) {
 	// S(i) -> S(i+1) -> D(i) -> D(i+1)
-	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), lastUnfinishedRoute.GetDstLoc(), request.GetSrcLoc(), nil, false)
+	startLoc := lastUnfinishedRoute.GetSrcLoc()
+	if isServingLastRoute {
+		startLoc = lastUnfinishedRoute.GetDstLoc()
+	}
+	r1, err := ds.getRoute(startTime, request, request.GetSrcTimeWindow(), startLoc, request.GetSrcLoc(), nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +242,7 @@ func (ds *DriverState) handleDeliveryRequestWithDefaultRouting(startTime time.Ti
 }
 
 func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryRequest, restrictedTimeWindow *delivery.TimeWindow, srcLoc, dstLoc *delivery.LatLng, item *binpack.Item, isRequestDst bool) (*simulation.Route, error) {
-	tw1, speed1, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, ds.maxSpeedKmPerHour)
+	tw1, speed1, distKm, err := calculateRequiredTimeWindowAndSpeedKmPerHour(curTime, restrictedTimeWindow, srcLoc, dstLoc, ds.maxSpeedKmPerHour)
 	if err != nil {
 		return nil, err
 	}
@@ -240,6 +257,7 @@ func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryR
 		SrcLoc:              srcLoc,
 		DstLoc:              dstLoc,
 		TimeWindow:          tw1,
+		Distance:            distKm,
 		VehicleState: &delivery.VehicleState{
 			VehicleCapacity: ds.vehicleCapacity,
 			BoxItems:        binpack.BoxItemsToAPIBoxItems(ds.packer.BoxItems()),
@@ -250,28 +268,28 @@ func (ds *DriverState) getRoute(curTime time.Time, request *simulation.DeliveryR
 	return r1, nil
 }
 
-func calculateRequiredTimeWindowAndSpeedKmPerHour(curTime time.Time, restrictedTimeWindow *delivery.TimeWindow, curLoc *delivery.LatLng, dstLoc *delivery.LatLng, maxSpeedKmPerHour float64) (*delivery.TimeWindow, float64, error) {
+func calculateRequiredTimeWindowAndSpeedKmPerHour(curTime time.Time, restrictedTimeWindow *delivery.TimeWindow, curLoc *delivery.LatLng, dstLoc *delivery.LatLng, maxSpeedKmPerHour float64) (*delivery.TimeWindow, float64, float64, error) {
 	distKm := h3.PointDistKm(
 		h3.GeoCoord{Latitude: curLoc.GetLat(), Longitude: curLoc.GetLng()},
 		h3.GeoCoord{Latitude: dstLoc.GetLat(), Longitude: dstLoc.GetLng()})
 	curLocToDstLocRequiredDuration, err := distance.CalculateTravelingTime(distKm, maxSpeedKmPerHour)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 	if curTime.Add(curLocToDstLocRequiredDuration).After(restrictedTimeWindow.GetEndedAt().AsTime()) {
-		return nil, 0, errExceedTimeWindow
+		return nil, 0, distKm, errExceedTimeWindow
 	}
 	if curTime.Add(curLocToDstLocRequiredDuration).Before(restrictedTimeWindow.GetStartedAt().AsTime()) {
 		requiredSpeed := distance.CalculateRequiredSpeedKmPerHour(distKm, restrictedTimeWindow.GetStartedAt().AsTime().Sub(curTime))
 		return &delivery.TimeWindow{
 			StartedAt: &timestamppb.Timestamp{Seconds: curTime.UTC().Unix()},
 			EndedAt:   &timestamppb.Timestamp{Seconds: restrictedTimeWindow.GetStartedAt().AsTime().UTC().Unix()},
-		}, requiredSpeed, nil
+		}, requiredSpeed, distKm, nil
 	}
 	return &delivery.TimeWindow{
 		StartedAt: &timestamppb.Timestamp{Seconds: curTime.UTC().Unix()},
 		EndedAt:   &timestamppb.Timestamp{Seconds: curTime.Add(curLocToDstLocRequiredDuration).UTC().Unix()},
-	}, maxSpeedKmPerHour, nil
+	}, maxSpeedKmPerHour, distKm, nil
 }
 
 func newItemWithRequest(request *simulation.DeliveryRequest) *binpack.Item {
@@ -281,4 +299,18 @@ func newItemWithRequest(request *simulation.DeliveryRequest) *binpack.Item {
 		int(request.GetGoodsMetadata().GetWidth()),
 		int(request.GetGoodsMetadata().GetLength()),
 		int(request.GetGoodsMetadata().GetHeight()))
+}
+
+func removeElementFromStringSlice(s []string, i int) []string {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
+
+func searchElementFromStringSlice(s []string, target string) int {
+	for i, v := range s {
+		if v == target {
+			return i
+		}
+	}
+	return -1
 }

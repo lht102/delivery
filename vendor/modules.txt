@@ -4,6 +4,9 @@ github.com/fsnotify/fsnotify
 ## explicit
 github.com/go-chi/chi/v5
 github.com/go-chi/chi/v5/middleware
+# github.com/go-chi/cors v1.2.0
+## explicit
+github.com/go-chi/cors
 # github.com/golang-migrate/migrate/v4 v4.12.2
 ## explicit
 github.com/golang-migrate/migrate/v4
